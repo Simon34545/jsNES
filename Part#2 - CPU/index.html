@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>NES Emulator Part #2: The CPU (6502 Implementation)</title>
+		<style>
+			body {
+				color: #FFF;
+				background-color: #000080;
+				margin: 0px;
+			}
+			
+			p {
+				display: inline-block;
+				font-family: monospace;
+				white-space: pre;
+				margin: 0px;
+			}
+		</style>
+	</head>
+	<body>
+		<p id="hex"></p>
+		<p id="inf"></p>
+		<p style="display: block;"> SPACE = Step Instruction    R = Reset    I = IRQ    N = NMI</p>
+		<script src="./olc6502.js"></script>
+		<script src="./Bus.js"></script>
+		<script src="./olcNes_Video1_6502.js"></script>
+	</body>
+</html>

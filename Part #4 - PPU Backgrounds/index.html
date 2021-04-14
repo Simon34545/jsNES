@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>NES Emulator Part #4: PPU - Background Rendering</title>
+		<style>
+			body {
+				color: #FFF;
+				background-color: #000080;
+				margin: 0px;
+			}
+			
+			p, canvas {
+				display: inline-block;
+				font-family: monospace;
+				white-space: pre;
+				margin: 0px;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="scr" width="256" height="240"></canvas>
+		<canvas id="pt0" width="128" height="128"></canvas>
+		<canvas id="pt1" width="128" height="128"></canvas>
+		<p id="hex"></p>
+		<p id="inf"></p>
+		<p style="display: block;"> SPACE = Run Emulator    C = Run Instruction    F = Run Frame    P = Switch Palette    S = Run Line    D = Run 128 Lines</p>
+		<script src="./Mapper.js"></script>
+		<script src="./Mapper_000.js"></script>
+		<script src="./Cartridge.js"></script>
+		<script src="./olc2C02.js"></script>
+		<script src="./olc6502.js"></script>
+		<script src="./Bus.js"></script>
+		<script src="./olcNes_PPU_Backgrounds.js"></script>
+	</body>
+</html>
