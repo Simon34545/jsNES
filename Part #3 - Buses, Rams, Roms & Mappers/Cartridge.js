@@ -4,7 +4,7 @@ class Cartridge {
 	
 	constructor(sFileName) {
 		var xhr = new XMLHttpRequest();
-		xhr.open('GET', 'https://simon34545.github.io/filehosting/' + sFileName, true);
+		xhr.open('GET', 'https://simon34545.github.io/jsNES/roms/' + sFileName, true);
 		xhr.responseType = 'blob';
 		window.cartTemp = this;
 		
