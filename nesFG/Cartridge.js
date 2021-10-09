@@ -11,6 +11,13 @@ class Header {
 }
 
 class Cartridge {
+	MIRROR = {
+		HORIZONTAL: 0,
+		VERTICAL: 1,
+		ONESCREEN_LO: 2,
+		ONESCREEN_HI: 3,
+	}	
+	
 	PRGMemory = new Uint8Array();
 	CHRMemory = new Uint8Array();
 	
@@ -19,7 +26,7 @@ class Cartridge {
 	CHRBanks = 0;
 	
 	mapper = null;
-	hw_mirror = 0;
+	mirror = 0;
 	
 	constructor(fileName) {
 		let file = nesroms[fileName];
@@ -52,8 +59,8 @@ class Cartridge {
 			read_idx = 512;
 		}
 		
-		this.mapperID = ((header.mapper2.v >> 4) << 4) | (header.mapper1.v >> 4);
-		this.hw_mirror = (header.mapper1.v & 0x01) ? MIRROR.VERTICAL : MIRROR.HORIZONTAL;
+		this.mapperID = ((header.mapper2.v >> 4) << 4) | (header.mapper1 >> 4);
+		this.mirror = (header.mapper1.v & 0x01) ? this.MIRROR.VERTICAL : this.MIRROR.HORIZONTAL;
 		
 		let fileType = 1;
 		
@@ -70,11 +77,7 @@ class Cartridge {
 			read_idx += this.PRGMemory.length;
 			
 			this.CHRBanks = header.chr_rom_chunks.v;
-			if (this.CHRBanks == 0) {
-				this.CHRMemory = new Uint8Array(8192);
-			} else {
-				this.CHRMemory = new Uint8Array(this.CHRBanks * 8192);
-			}
+			this.CHRMemory = new Uint8Array(this.CHRBanks * 8192);
 			for (let i = 0; i < this.CHRMemory.length; i++) {
 				this.CHRMemory[i] = file[read_idx + i];
 			}
@@ -86,23 +89,14 @@ class Cartridge {
 		}
 		
 		switch(this.mapperID) {
-		case  0: this.mapper = new Mapper_000(this.PRGBanks, this.CHRBanks); break;
-		//case  1: this.mapper = new Mapper_001(this.PRGBanks, this.CHRBanks); break;
-		case  2: this.mapper = new Mapper_002(this.PRGBanks, this.CHRBanks); break;
-		case  3: this.mapper = new Mapper_003(this.PRGBanks, this.CHRBanks); break;
-		case 66: this.mapper = new Mapper_066(this.PRGBanks, this.CHRBanks); break;
+		case 0: this.mapper = new Mapper_000(this.PRGBanks, this.CHRBanks); break;
 		}
 	}
 	
 	cpuRead(addr, data) {
 		let mapped_addr = new uint32();
-		if (this.mapper.cpuMapRead(addr, mapped_addr, data)) {
-			if (mapped_addr.v == 0xFFFFFFFF) {
-				return true;
-			} else {
-				data.v = this.PRGMemory[mapped_addr.v];
-			}
-			//console.log("mapped to " + hex(mapped_addr.v, 8) + " out of " + hex(this.PRGMemory.length, 8))
+		if (this.mapper.cpuMapRead(addr, mapped_addr)) {
+			data.v = this.PRGMemory[mapped_addr.v];
 			return true;
 		} else {
 			return false;
@@ -112,11 +106,7 @@ class Cartridge {
 	cpuWrite(addr, data) {
 		let mapped_addr = new uint32();
 		if (this.mapper.cpuMapWrite(addr, mapped_addr, data)) {
-			if (mapped_addr.v == 0xFFFFFFFF) {
-				return true;
-			} else {
-				this.PRGMemory[mapped_addr.v] = data;
-			}
+			this.PRGMemory[mapped_addr.v] = data;
 			return true;
 		} else {
 			return false;
@@ -147,18 +137,5 @@ class Cartridge {
 		if (this.mapper != null) {
 			this.mapper.reset();
 		}
-	}
-	
-	Mirror() {
-		let m = this.mapper.mirror();
-		if (m == MIRROR.HARDWARE) {
-			return this.hw_mirror;
-		} else {
-			return m;
-		}
-	}
-	
-	GetMapper() {
-		return this.mapper;
 	}
 }

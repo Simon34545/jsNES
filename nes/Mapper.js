@@ -1,3 +1,11 @@
+const MIRROR = {
+	HARDWARE: 0,
+	HORIZONTAL: 1,
+	VERTICAL: 2,
+	ONESCREEN_LO: 3,
+	ONESCREEN_HI: 4,
+}	
+
 class Mapper {
 	PRGBanks = 0;
 	CHRBanks = 0;
@@ -7,5 +15,25 @@ class Mapper {
 		this.CHRBanks = chrBanks;
 		
 		this.reset();
+	}
+	
+	reset() {
+		
+	}
+	
+	mirror() {
+		return MIRROR.HARDWARE;
+	}
+	
+	irqState() {
+		return false;
+	}
+	
+	irqClear() {
+		
+	}
+	
+	scanline() {
+		
 	}
 }

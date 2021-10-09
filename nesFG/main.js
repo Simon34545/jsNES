@@ -73,14 +73,12 @@ function start() {
 	
 	nes.insertCartridge(cart);
 	
-	//mapAsm = nes.cpu.disassemble(0x0000, 0xFFFF);
+	mapAsm = nes.cpu.disassemble(0x0000, 0xFFFF);
 	
 	nes.reset();
 	
 	return true;
 }
-
-let totalFrameTime = 0;
 
 function update(elapsedTime) {
 	Clear(colors.DARK_BLUE);
@@ -95,16 +93,15 @@ function update(elapsedTime) {
 	nes.controller[0] |= heldKeys["ArrowLeft"] ? 0x02 : 0x00;
 	nes.controller[0] |= heldKeys["ArrowRight"] ? 0x01 : 0x00;
 	
+	DrawString(516+178+18, 2, elapsedTime);
+	
 	if (emulationRun) {
 		if (residualTime > 0) {
 			residualTime -= elapsedTime;
 		} else {
 			residualTime += (1000 / 60) - elapsedTime;
-			const t0 = performance.now();
 			do { nes.clock(); } while (!nes.ppu.frame_complete);
 			nes.ppu.frame_complete = false;
-			const t1 = performance.now();
-			totalFrameTime = t1 - t0;
 		}
 	} else {
 		if (pressedKeys["c"]) {
@@ -121,9 +118,6 @@ function update(elapsedTime) {
 			nes.ppu.frame_complete = false;
 		}
 	}
-	
-	DrawString(516+178, 12, totalFrameTime);
-	DrawString(516+178+18, 2, elapsedTime - Math.floor(totalFrameTime));
 	
 	if (pressedKeys["r"]) nes.reset();
 	if (pressedKeys[" "]) emulationRun = !emulationRun;

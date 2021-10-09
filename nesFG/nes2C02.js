@@ -658,7 +658,7 @@ class nes2C02 {
 			data.v = this.tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF];
 		} else if (addr >= 0x2000 && addr <= 0x3EFF) {
 			addr &= 0x0FFF;
-			if (this.cart.Mirror() == MIRROR.VERTICAL) {
+			if (this.cart.mirror == this.cart.MIRROR.VERTICAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
 					data.v = this.tblName[0][addr & 0x03FF];
 				}
@@ -671,7 +671,7 @@ class nes2C02 {
 				if (addr >= 0x0C00 && addr <= 0x0FFF) {
 					data.v = this.tblName[1][addr & 0x03FF];
 				}
-			} else if (this.cart.Mirror() == MIRROR.HORIZONTAL) {
+			} else if (this.cart.mirror == this.cart.MIRROR.HORIZONTAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
 					data.v = this.tblName[0][addr & 0x03FF];
 				}
@@ -707,7 +707,7 @@ class nes2C02 {
 			this.tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF] = data.v;
 		} else if (addr >= 0x2000 && addr <= 0x3EFF) {
 			addr &= 0x0FFF;
-			if (this.cart.Mirror() == MIRROR.VERTICAL) {
+			if (this.cart.mirror == this.cart.MIRROR.VERTICAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
 					this.tblName[0][addr & 0x03FF] = data.v;
 				}
@@ -720,7 +720,7 @@ class nes2C02 {
 				if (addr >= 0x0C00 && addr <= 0x0FFF) {
 					this.tblName[1][addr & 0x03FF] = data.v;
 				}
-			} else if (this.cart.Mirror() == MIRROR.HORIZONTAL) {
+			} else if (this.cart.mirror == this.cart.MIRROR.HORIZONTAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
 					this.tblName[0][addr & 0x03FF] = data.v;
 				}
