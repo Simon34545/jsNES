@@ -18,6 +18,8 @@ class Bus {
 	dma_dummy = true;
 	dma_transfer = false;
 	
+	data = new uint8();
+	
 	constructor() {
 		for (let i = 0; i < this.cpuRam.length; i++) {
 			this.cpuRam[i] = 0x00;
@@ -27,15 +29,15 @@ class Bus {
 	}
 	
 	cpuWrite(addr, data) {
-		data = new uint8(data);
-		if (this.cart.cpuWrite(addr, data)) {
+		this.data.v = data;
+		if (this.cart.cpuWrite(addr, this.data)) {
 			
 		} else if (addr >= 0x0000 && addr <= 0x1FFF) {
-			this.cpuRam[addr & 0x07FF] = data.v;
+			this.cpuRam[addr & 0x07FF] = this.data.v;
 		} else if (addr >= 0x2000 && addr <= 0x3FFF) {
-			this.ppu.cpuWrite(addr & 0x0007, data.v);
+			this.ppu.cpuWrite(addr & 0x0007, this.data.v);
 		} else if (addr == 0x4014) {
-			this.dma_page.v = data.v;
+			this.dma_page.v = this.data.v;
 			this.dma_addr.v = 0x00;
 			this.dma_transfer = true;
 		} else if (addr >= 0x4016 && addr <= 0x4017) {
@@ -44,20 +46,20 @@ class Bus {
 	}
 	
 	cpuRead(addr, readOnly = false) {
-		let data = new uint8();
+		this.data.v = 0;
 		
-		if (this.cart.cpuRead(addr, data)) {
+		if (this.cart.cpuRead(addr, this.data)) {
 			
 		} else if (addr >= 0x0000 && addr <= 0x1FFF) {
-			data.v = this.cpuRam[addr & 0x07FF];
+			this.data.v = this.cpuRam[addr & 0x07FF];
 		} else if (addr >= 0x2000 && addr <= 0x3FFF) {
-			data.v = this.ppu.cpuRead(addr & 0x0007, readOnly);
+			this.data.v = this.ppu.cpuRead(addr & 0x0007, readOnly);
 		} else if (addr >= 0x4016 && addr <= 0x4017) {
-			data.v = (this.controller_state[addr & 0x0001] & 0x80) > 0;
+			this.data.v = (this.controller_state[addr & 0x0001] & 0x80) > 0;
 			this.controller_state[addr & 0x0001] <<= 1;
 		}
 		
-		return data.v;
+		return this.data.v;
 	}
 	
 	insertCartridge(cartridge) {
@@ -79,6 +81,7 @@ class Bus {
 	
 	clock() {
 		this.ppu.clock();
+		
 		if (this.systemClockCounter % 3 == 0) {
 			if (this.dma_transfer) {
 				if (this.dma_dummy) {
@@ -106,6 +109,11 @@ class Bus {
 		if (this.ppu.nmi) {
 			this.ppu.nmi = false;
 			this.cpu.nmi();
+		}
+		
+		if (this.cart.GetMapper().irqState()) {
+			this.cart.GetMapper().irqClear();
+			this.cpu.irq();
 		}
 		
 		this.systemClockCounter++;

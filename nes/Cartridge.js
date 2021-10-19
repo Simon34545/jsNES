@@ -56,6 +56,7 @@ class Cartridge {
 		this.hw_mirror = (header.mapper1.v & 0x01) ? MIRROR.VERTICAL : MIRROR.HORIZONTAL;
 		
 		let fileType = 1;
+		if ((header.mapper2.v & 0x0C) == 0x08) console.log('type 2');
 		
 		if (fileType == 0) {
 			
@@ -87,22 +88,25 @@ class Cartridge {
 		
 		switch(this.mapperID) {
 		case  0: this.mapper = new Mapper_000(this.PRGBanks, this.CHRBanks); break;
-		//case  1: this.mapper = new Mapper_001(this.PRGBanks, this.CHRBanks); break;
+		case  1: this.mapper = new Mapper_001(this.PRGBanks, this.CHRBanks); break;
 		case  2: this.mapper = new Mapper_002(this.PRGBanks, this.CHRBanks); break;
 		case  3: this.mapper = new Mapper_003(this.PRGBanks, this.CHRBanks); break;
+		case  4: this.mapper = new Mapper_004(this.PRGBanks, this.CHRBanks); break;
 		case 66: this.mapper = new Mapper_066(this.PRGBanks, this.CHRBanks); break;
 		}
 	}
 	
+	mapped_addr = new uint32();
+	
 	cpuRead(addr, data) {
-		let mapped_addr = new uint32();
-		if (this.mapper.cpuMapRead(addr, mapped_addr, data)) {
-			if (mapped_addr.v == 0xFFFFFFFF) {
+		this.mapped_addr.v = 0;
+		if (this.mapper.cpuMapRead(addr, this.mapped_addr, data)) {
+			if (this.mapped_addr.v == -1) {
 				return true;
 			} else {
-				data.v = this.PRGMemory[mapped_addr.v];
+				data.v = this.PRGMemory[this.mapped_addr.v];
 			}
-			//console.log("mapped to " + hex(mapped_addr.v, 8) + " out of " + hex(this.PRGMemory.length, 8))
+			//console.log("mapped to " + hex(this.mapped_addr.v, 8) + " out of " + hex(this.PRGMemory.length, 8))
 			return true;
 		} else {
 			return false;
@@ -110,12 +114,12 @@ class Cartridge {
 	}
 	
 	cpuWrite(addr, data) {
-		let mapped_addr = new uint32();
-		if (this.mapper.cpuMapWrite(addr, mapped_addr, data)) {
-			if (mapped_addr.v == 0xFFFFFFFF) {
+		this.mapped_addr.v = 0;
+		if (this.mapper.cpuMapWrite(addr, this.mapped_addr, data)) {
+			if (this.mapped_addr.v == -1) {
 				return true;
 			} else {
-				this.PRGMemory[mapped_addr.v] = data;
+				this.PRGMemory[this.mapped_addr.v] = data.v;
 			}
 			return true;
 		} else {
@@ -124,9 +128,9 @@ class Cartridge {
 	}
 	
 	ppuRead(addr, data) {
-		let mapped_addr = new uint32();
-		if (this.mapper.ppuMapRead(addr, mapped_addr)) {
-			data.v = this.CHRMemory[mapped_addr.v];
+		this.mapped_addr.v = 0;
+		if (this.mapper.ppuMapRead(addr, this.mapped_addr)) {
+			data.v = this.CHRMemory[this.mapped_addr.v];
 			return true;
 		} else {
 			return false;
@@ -134,9 +138,9 @@ class Cartridge {
 	}
 	
 	ppuWrite(addr, data) {
-		let mapped_addr = new uint32();
-		if (this.mapper.ppuMapWrite(addr, mapped_addr)) {
-			this.CHRMemory[mapped_addr.v] = data;
+		this.mapped_addr.v = 0;
+		if (this.mapper.ppuMapWrite(addr, this.mapped_addr)) {
+			this.CHRMemory[this.mapped_addr.v] = data;
 			return true;
 		} else {
 			return false;

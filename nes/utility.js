@@ -12,44 +12,11 @@ let ctx = cnvs.getContext('2d');
 // graphics
 
 class Color {
-	color = [0, 0, 0, 255];
 	constructor(r = 0, g = 0, b = 0, a = 255) {
-		this.color[0] = r;
-		this.color[1] = g;
-		this.color[2] = b;
-		this.color[3] = a;
-	}
-	
-	get r() {
-		return this.color[0];
-	}
-	
-	set r(r) {
-		this.color[0] = r;
-	}
-	
-	get g() {
-		return this.color[1];
-	}
-	
-	set g(g) {
-		this.color[1] = g;
-	}
-	
-	get b() {
-		return this.color[2];
-	}
-	
-	set b(b) {
-		this.color[2] = b;
-	}
-	
-	get a() {
-		return this.color[3];
-	}
-	
-	set a(a) {
-		this.color[3] = a;
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.a = a;
 	}
 }
 
@@ -191,9 +158,9 @@ let waitStart = setInterval(function() {
 			alert("Failed to start!");
 			return;
 		}
-		prevTime = Date.now();
+		prevTime = performance.now();
 		frameInterval = setInterval(function() {
-			let currentTime = Date.now();
+			let currentTime = performance.now();
 			let elapsedTime = currentTime - prevTime;
 			prevTime = currentTime;
 			if (typeof(update) == 'function') {

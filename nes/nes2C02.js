@@ -54,9 +54,9 @@ class nes2C02 {
 	scanline = 0;
 	cycle = 0;
 	
-	status = new Reg1();
-	mask = new Reg2();
-	control = new Reg3();
+	status = new PPUSTATUS();
+	mask = new PPUMASK();
+	control = new PPUCTRL();
 	
 	address_latch = 0x00;
 	ppu_data_buffer = 0x00;
@@ -79,7 +79,7 @@ class nes2C02 {
 	OAM = new Array(64).fill().map(u => { return new ObjectAttributeEntry(); });
 	pOAM(addr, data) {
 		let which = this.OAM[Math.floor(addr / 4)];
-		if (data != undefined) {
+		if (data !== undefined) {
 			switch(addr % 4) {
 			case 0:
 				which.y = data;
@@ -216,7 +216,7 @@ class nes2C02 {
 	
 	IncrementScrollX() {
 		if (this.mask.render_background || this.mask.render_sprites) {
-			if (this.vram_addr.coarse_x == 31) {
+			if (this.vram_addr.coarse_x === 31) {
 				this.vram_addr.coarse_x = 0;
 				this.vram_addr.nametable_x = this.vram_addr.nametable_x ? 0 : 1;
 			} else {
@@ -232,11 +232,11 @@ class nes2C02 {
 			} else {
 				this.vram_addr.fine_y = 0;
 				
-				if (this.vram_addr.coarse_y == 29) {
+				if (this.vram_addr.coarse_y === 29) {
 					this.vram_addr.coarse_y = 0;
 					
 					this.vram_addr.nametable_y = this.vram_addr.nametable_y ? 0 : 1;
-				} else if (this.vram_addr.coarse_y == 31) {
+				} else if (this.vram_addr.coarse_y === 31) {
 					this.vram_addr.coarse_y = 0;
 				} else {
 					this.vram_addr.coarse_y++;
@@ -289,11 +289,11 @@ class nes2C02 {
 	
 	clock() {
 		if (this.scanline >= -1 && this.scanline < 240) {
-			if (this.scanline == 0 && this.cycle == 0) {
+			if (this.scanline === 0 && this.cycle === 0) {
 				this.cycle = 1;
 			}
 			
-			if (this.scanline == -1 && this.cycle == 1) {
+			if (this.scanline === -1 && this.cycle === 1) {
 				this.status.vertical_blank = 0;
 				this.status.sprite_zero_hit = 0;
 				this.status.sprite_overflow = 0;
@@ -336,25 +336,25 @@ class nes2C02 {
 				}
 			}
 			
-			if (this.cycle == 256) {
+			if (this.cycle === 256) {
 				this.IncrementScrollY();
 			}
 			
-			if (this.cycle == 257) {
+			if (this.cycle === 257) {
 				this.LoadBackgroundShifters();
 				this.TransferAddressX();
 			}
 			
-			if (this.cycle == 338 || this.cycle == 340) {
+			if (this.cycle === 338 || this.cycle === 340) {
 				this.bg_next_tile_id = this.ppuRead(0x2000 | (this.vram_addr.reg & 0x0FFF));
 			}
 			
-			if (this.scanline == -1 && this.cycle >= 280 && this.cycle < 305) {
+			if (this.scanline === -1 && this.cycle >= 280 && this.cycle < 305) {
 				this.TransferAddressY();
 			}
 			
 			// Foreground Rendering
-			if (this.cycle == 257 && this.scanline >= 0) {
+			if (this.cycle === 257 && this.scanline >= 0) {
 				this.spriteScanline.forEach(function(e){e.reset(0xFF)});
 				this.sprite_count = 0;
 				
@@ -369,7 +369,7 @@ class nes2C02 {
 					let diff = (this.scanline - this.OAM[OAMEntry].y);
 					if (diff >= 0 && diff < (this.control.sprite_size ? 16 : 8)) {
 						if (this.sprite_count < 8) {
-							if (OAMEntry == 0) {
+							if (OAMEntry === 0) {
 								this.spriteZeroHitPossible = true;
 							}
 							
@@ -382,7 +382,7 @@ class nes2C02 {
 				this.status.sprite_overflow = (this.sprite_count > 8);
 			}
 			
-			if (this.cycle == 340) {
+			if (this.cycle === 340) {
 				for (let i = 0; i < this.sprite_count; i++) {
 					let sprite_pattern_bits_lo, sprite_pattern_bits_hi;
 					let sprite_pattern_addr_lo, sprite_pattern_addr_hi;
@@ -442,11 +442,11 @@ class nes2C02 {
 			}
 		}
 		
-		if (this.scanline == 240) {
+		if (this.scanline === 240) {
 			
 		}
 		
-		if (this.scanline == 241 && this.cycle == 1) {
+		if (this.scanline === 241 && this.cycle === 1) {
 			this.status.vertical_blank = 1;
 			if (this.control.enable_nmi) {
 				this.nmi = true;
@@ -476,16 +476,16 @@ class nes2C02 {
 			this.spriteZeroBeingRendered = false;
 			
 			for (let i = 0; i < this.sprite_count; i++) {
-				if (this.spriteScanline[i].x == 0) {
+				if (this.spriteScanline[i].x === 0) {
 					let fg_pixel_lo = (this.sprite_shifter_pattern_lo[i] & 0x80) > 0;
 					let fg_pixel_hi = (this.sprite_shifter_pattern_hi[i] & 0x80) > 0;
 					fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo;
 					
 					fg_palette = (this.spriteScanline[i].attribute & 0x03) + 0x04;
-					fg_priority = (this.spriteScanline[i].attribute & 0x20) == 0;
+					fg_priority = (this.spriteScanline[i].attribute & 0x20) === 0;
 					
-					if (fg_pixel != 0) {
-						if (i == 0) {
+					if (fg_pixel !== 0) {
+						if (i === 0) {
 							this.spriteZeroBeingRendered = true;
 						}
 						
@@ -498,13 +498,13 @@ class nes2C02 {
 		let pixel = 0x00;
 		let palette = 0x00;
 		
-		if (bg_pixel == 0 && fg_pixel == 0) {
+		if (bg_pixel === 0 && fg_pixel === 0) {
 			pixel = 0x00;
 			palette = 0x00;
-		} else if (bg_pixel == 0 && fg_pixel > 0) {
+		} else if (bg_pixel === 0 && fg_pixel > 0) {
 			pixel = fg_pixel;
 			palette = fg_palette;
-		} else if (bg_pixel > 0 && fg_pixel == 0) {
+		} else if (bg_pixel > 0 && fg_pixel === 0) {
 			pixel = bg_pixel;
 			palette = bg_palette;
 		} else if (bg_pixel > 0 && fg_pixel > 0) {
@@ -534,6 +534,12 @@ class nes2C02 {
 		this.sprScreen.SetPixel(this.cycle - 1, this.scanline, this.GetColorFromPaletteRam(palette, pixel));//this.palScreen[(Math.floor(Math.random() * 32768) % 2) ? 0x3F : 0x30]);
 		
 		this.cycle++;
+		if (this.mask.render_background || this.mask.render_sprites) {
+			if (this.cycle == 260 && this.scanline < 240) {
+				this.cart.GetMapper().scanline();
+			}
+		}
+		
 		if (this.cycle >= 341) {
 			this.cycle = 0;
 			this.scanline++;
@@ -621,7 +627,7 @@ class nes2C02 {
 			this.pOAM(this.oam_addr, data);
 			break;
 		case 0x0005: // Scroll
-			if (this.address_latch == 0) {
+			if (this.address_latch === 0) {
 				this.fine_x.v = data & 0x07;
 				this.tram_addr.coarse_x = data >> 3;
 				this.address_latch = 1;
@@ -632,7 +638,7 @@ class nes2C02 {
 			}
 			break;
 		case 0x0006: // PPU Address
-			if (this.address_latch == 0) {
+			if (this.address_latch === 0) {
 				this.tram_addr.reg = (this.tram_addr.reg & 0x00FF) | (data << 8);
 				this.address_latch = 1;
 			} else {
@@ -658,7 +664,7 @@ class nes2C02 {
 			data.v = this.tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF];
 		} else if (addr >= 0x2000 && addr <= 0x3EFF) {
 			addr &= 0x0FFF;
-			if (this.cart.Mirror() == MIRROR.VERTICAL) {
+			if (this.cart.Mirror() === MIRROR.VERTICAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
 					data.v = this.tblName[0][addr & 0x03FF];
 				}
@@ -671,7 +677,7 @@ class nes2C02 {
 				if (addr >= 0x0C00 && addr <= 0x0FFF) {
 					data.v = this.tblName[1][addr & 0x03FF];
 				}
-			} else if (this.cart.Mirror() == MIRROR.HORIZONTAL) {
+			} else if (this.cart.Mirror() === MIRROR.HORIZONTAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
 					data.v = this.tblName[0][addr & 0x03FF];
 				}
@@ -687,10 +693,10 @@ class nes2C02 {
 			}
 		} else if (addr >= 0x3F00 && addr <= 0x3FFF) {
 			addr &= 0x001F;
-			if (addr == 0x0010) addr = 0x0000;
-			if (addr == 0x0014) addr = 0x0004;
-			if (addr == 0x0018) addr = 0x0008;
-			if (addr == 0x001C) addr = 0x000C;
+			if (addr === 0x0010) addr = 0x0000;
+			if (addr === 0x0014) addr = 0x0004;
+			if (addr === 0x0018) addr = 0x0008;
+			if (addr === 0x001C) addr = 0x000C;
 			data.v = this.tblPalette[addr];
 		}
 		
@@ -707,7 +713,7 @@ class nes2C02 {
 			this.tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF] = data.v;
 		} else if (addr >= 0x2000 && addr <= 0x3EFF) {
 			addr &= 0x0FFF;
-			if (this.cart.Mirror() == MIRROR.VERTICAL) {
+			if (this.cart.Mirror() === MIRROR.VERTICAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
 					this.tblName[0][addr & 0x03FF] = data.v;
 				}
@@ -720,7 +726,7 @@ class nes2C02 {
 				if (addr >= 0x0C00 && addr <= 0x0FFF) {
 					this.tblName[1][addr & 0x03FF] = data.v;
 				}
-			} else if (this.cart.Mirror() == MIRROR.HORIZONTAL) {
+			} else if (this.cart.Mirror() === MIRROR.HORIZONTAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
 					this.tblName[0][addr & 0x03FF] = data.v;
 				}
@@ -736,10 +742,10 @@ class nes2C02 {
 			}
 		} else if (addr >= 0x3F00 && addr <= 0x3FFF) {
 			addr &= 0x001F;
-			if (addr == 0x0010) addr = 0x0000;
-			if (addr == 0x0014) addr = 0x0004;
-			if (addr == 0x0018) addr = 0x0008;
-			if (addr == 0x001C) addr = 0x000C;
+			if (addr === 0x0010) addr = 0x0000;
+			if (addr === 0x0014) addr = 0x0004;
+			if (addr === 0x0018) addr = 0x0008;
+			if (addr === 0x001C) addr = 0x000C;
 			this.tblPalette[addr] = data.v;
 		}
 	}
@@ -778,271 +784,149 @@ class loopy_register {
 	}
 	
 	set reg(v) {
-		this.coarse_x = v &    0b0000000000011111;
-		this.coarse_y = v &    0b0000001111100000;
-		this.nametable_x = v & 0b0000010000000000;
-		this.nametable_y = v & 0b0000100000000000;
-		this.fine_y = v &      0b0111000000000000;
-		this.unused = v &      0b1000000000000000;
-		
-		this.coarse_x >>= 0;
-		this.coarse_y >>= 5;
-		this.nametable_x >>= 10;
-		this.nametable_y >>= 11;
-		this.fine_y >>= 12;
-		this.unused >>= 15;
+		this.coarse_x = (v &    0b0000000000011111) >> 0;
+		this.coarse_y = (v &    0b0000001111100000) >> 5;
+		this.nametable_x = (v & 0b0000010000000000) >> 10;
+		this.nametable_y = (v & 0b0000100000000000) >> 11;
+		this.fine_y = (v &      0b0111000000000000) >> 12;
+		this.unused = (v &      0b1000000000000000) >> 15;
 	}
 	
 	constructor(v) {
 		this.reg = v;
 	}
 	
-	coarse_x = 0b00000
-
-	coarse_y = 0b00000
+	coarse_x = 0b00000;
 	
-	nametable_x = 0b0
+	coarse_y = 0b00000;
 	
-	nametable_y = 0b0
+	nametable_x = 0b0;
 	
-	fine_y = 0b000
+	nametable_y = 0b0;
 	
-	unused = 0b0
+	fine_y = 0b000;
+	
+	unused = 0b0;
 }
 
-
-
-class Reg1 {
-	regv = new uint8();
-	
+class PPUSTATUS {
 	get reg() {
-		return this.regv.v;
+		let un = this.unused;
+		let so = this.sprite_overflow;
+		let sz = this.sprite_zero_hit;
+		let vb = this.vertical_blank;
+		
+		return (un << 0) | (so << 5) | (sz << 6) | (vb << 7);
 	}
 	
 	set reg(v) {
-		this.regv.v = v;
+		this.unused = (v &          0b00011111) >> 0;
+		this.sprite_overflow = (v & 0b00100000) >> 5;
+		this.sprite_zero_hit = (v & 0b01000000) >> 6;
+		this.vertical_blank = (v &  0b10000000) >> 7;
 	}
 	
-	SetBit(b, v) {
-		if (v) {
-			this.regv.v |= b;
-		} else {
-			this.regv.v &= (~b) & 0xFF;
-		}
+	constructor(v) {
+		this.reg = v;
 	}
 	
-	GetBit(b) {
-		return ((this.regv.v & b) > 0) ? 1 : 0;
-	}
+	unused = 0b00000;
 	
-	get unused() {
-		return this.regv.v & 0x1F;
-	}
+	sprite_overflow  = 0b0;
 	
-	set unused(v) {
-		this.regv.v &= 0xE0;
-		this.regv.v |= v;
-	}
+	sprite_zero_hit  = 0b0;
 	
-	get sprite_overflow() {
-		return this.GetBit(1 << 5);
-	}
-	
-	set sprite_overflow(v) {
-		this.SetBit(1 << 5, v);
-	}
-	
-	get sprite_zero_hit() {
-		return this.GetBit(1 << 6);
-	}
-	
-	set sprite_zero_hit(v) {
-		this.SetBit(1 << 6, v);
-	}
-	
-	get vertical_blank() {
-		return this.GetBit(1 << 7);
-	}
-	
-	set vertical_blank(v) {
-		this.SetBit(1 << 7, v);
-	}
+	vertical_blank = 0b0;
 }
 
-class Reg2 {
-	regv = new uint8();
-	
+class PPUMASK {
 	get reg() {
-		return this.regv.v;
+		let gs = this.grayscale;
+		let bl = this.render_background_left;
+		let sl = this.render_sprites_left;
+		let rb = this.render_background;
+		let rs = this.render_sprites;
+		let er = this.enhance_red;
+		let eg = this.enhance_green;
+		let eb = this.enhance_blue;
+		
+		return (gs << 0) | (bl << 1) | (sl << 2) | (rb << 3) | (rs << 4) | (er << 5) | (eg << 6) | (eb << 7);
 	}
 	
 	set reg(v) {
-		this.regv.v = v;
+		this.grayscale = (v &              0b00000001) >> 0;
+		this.render_background_left = (v & 0b00000010) >> 1;
+		this.render_sprites_left = (v &    0b00000100) >> 2;
+		this.render_background = (v &      0b00001000) >> 3;
+		this.render_sprites = (v &         0b00010000) >> 4;
+		this.enhance_red = (v &            0b00100000) >> 5;
+		this.enhance_green = (v &          0b01000000) >> 6;
+		this.enhance_blue = (v &           0b10000000) >> 7;
 	}
 	
-	SetBit(b, v) {
-		if (v) {
-			this.regv.v |= b;
-		} else {
-			this.regv.v &= (~b) & 0xFF;
-		}
+	constructor(v) {
+		this.reg = v;
 	}
 	
-	GetBit(b) {
-		return ((this.regv.v & b) > 0) ? 1 : 0;
-	}
+	grayscale = 0b0;
 	
-	get grayscale() {
-		return this.GetBit(1 << 0);
-	}
+	render_background_left = 0b0;
 	
-	set grayscale(v) {
-		this.SetBit(1 << 0, v);
-	}
+	render_sprites_left = 0b0;
 	
-	get render_background_left() {
-		return this.GetBit(1 << 1);
-	}
+	render_background = 0b0;
 	
-	set render_background_left(v) {
-		this.SetBit(1 << 1, v);
-	}
+	render_sprites = 0b0;
 	
-	get render_sprites_left() {
-		return this.GetBit(1 << 2);
-	}
+	enhance_red = 0b0;
 	
-	set render_sprites_left(v) {
-		this.SetBit(1 << 2, v);
-	}
+	enhance_green = 0b0;
 	
-	get render_background() {
-		return this.GetBit(1 << 3);
-	}
-	
-	set render_background(v) {
-		this.SetBit(1 << 3, v);
-	}
-	
-	get render_sprites() {
-		return this.GetBit(1 << 4);
-	}
-	
-	set render_sprites(v) {
-		this.SetBit(1 << 4, v);
-	}
-	
-	get enhance_red() {
-		return this.GetBit(1 << 5);
-	}
-	
-	set enhance_red(v) {
-		this.SetBit(1 << 5, v);
-	}
-	
-	get enhance_green() {
-		return this.GetBit(1 << 6);
-	}
-	
-	set enhance_green(v) {
-		this.SetBit(1 << 6, v);
-	}
-	
-	get enhance_blue() {
-		return this.GetBit(1 << 7);
-	}
-	
-	set enhance_blue(v) {
-		this.SetBit(1 << 7, v);
-	}
-	
+	enhance_blue = 0b0;
 }
 
-class Reg3 {
-	regv = new uint8();
-	
+class PPUCTRL {
 	get reg() {
-		return this.regv.v;
+		let nx = this.nametable_x;
+		let ny = this.nametable_y;
+		let im = this.increment_mode;
+		let ps = this.pattern_sprite;
+		let pb = this.pattern_background;
+		let ss = this.sprite_size;
+		let sm = this.slave_mode;
+		let en = this.enable_nmi;
+		
+		return (nx << 0) | (ny << 1) | (im << 2) | (ps << 3) | (pb << 4) | (ss << 5) | (sm << 6) | (en << 7);
 	}
 	
 	set reg(v) {
-		this.regv.v = v;
+		this.nametable_x = (v &        0b00000001) >> 0;
+		this.nametable_y = (v &        0b00000010) >> 1;
+		this.increment_mode = (v &     0b00000100) >> 2;
+		this.pattern_sprite = (v &     0b00001000) >> 3;
+		this.pattern_background = (v & 0b00010000) >> 4;
+		this.sprite_size = (v &        0b00100000) >> 5;
+		this.slave_mode = (v &         0b01000000) >> 6;
+		this.enable_nmi = (v &         0b10000000) >> 7;
 	}
 	
-	SetBit(b, v) {
-		if (v) {
-			this.regv.v |= b;
-		} else {
-			this.regv.v &= (~b) & 0xFF;
-		}
+	constructor(v) {
+		this.reg = v;
 	}
 	
-	GetBit(b) {
-		return ((this.regv.v & b) > 0) ? 1 : 0;
-	}
+	nametable_x = 0b0;
 	
-	get nametable_x() {
-		return this.GetBit(1 << 0);
-	}
+	nametable_y = 0b0;
 	
-	set nametable_x(v) {
-		this.SetBit(1 << 0, v);
-	}
+	increment_mode = 0b0;
 	
-	get nametable_y() {
-		return this.GetBit(1 << 1);
-	}
+	pattern_sprite = 0b0;
 	
-	set nametable_y(v) {
-		this.SetBit(1 << 1, v);
-	}
+	pattern_background = 0b0;
 	
-	get increment_mode() {
-		return this.GetBit(1 << 2);
-	}
+	sprite_size = 0b0;
 	
-	set increment_mode(v) {
-		this.SetBit(1 << 2, v);
-	}
+	slave_mode = 0b0;
 	
-	get pattern_sprite() {
-		return this.GetBit(1 << 3);
-	}
-	
-	set pattern_sprite(v) {
-		this.SetBit(1 << 3, v);
-	}
-	
-	get pattern_background() {
-		return this.GetBit(1 << 4);
-	}
-	
-	set pattern_background(v) {
-		this.SetBit(1 << 4, v);
-	}
-	
-	get sprite_size() {
-		return this.GetBit(1 << 5);
-	}
-	
-	set sprite_size(v) {
-		this.SetBit(1 << 5, v);
-	}
-	
-	get slave_mode() {
-		return this.GetBit(1 << 6);
-	}
-	
-	set slave_mode(v) {
-		this.SetBit(1 << 6, v);
-	}
-	
-	get enable_nmi() {
-		return this.GetBit(1 << 7);
-	}
-	
-	set enable_nmi(v) {
-		this.SetBit(1 << 7, v);
-	}
-	
+	enable_nmi = 0b0;
 }

@@ -57,10 +57,8 @@ class nes6502 {
 		}
 	}
 	
-	log = "";
-	
 	clock() {
-		if (this.cycles.v == 0) {
+		if (this.cycles.v === 0) {
 			this.opcode.v = this.read(this.pc.v);
 			
 			this.SetFlag(this.FLAGS6502.U, true);
@@ -106,7 +104,7 @@ class nes6502 {
 	}
 	
 	irq() {
-		if (this.GetFlag(this.FLAGS6502.I) == 0) {
+		if (this.GetFlag(this.FLAGS6502.I) === 0) {
 			this.write(0x0100 + this.stkp.v, (this.pc.v >> 8) & 0x00FF);
 			this.stkp.v--;
 			this.write(0x0100 + this.stkp.v, this.pc.v & 0x00FF);
@@ -148,7 +146,7 @@ class nes6502 {
 	}
 	
 	fetch() {
-		if (!(this.lookup[this.opcode.v].addrmode == "IMP")) {
+		if (!(this.lookup[this.opcode.v].addrmode === "IMP")) {
 			this.fetched.v = this.read(this.addr_abs.v);
 		}
 		return this.fetched.v;
@@ -214,7 +212,7 @@ class nes6502 {
 		this.addr_abs.v = (hi << 8) | lo;
 		this.addr_abs.v += this.x.v;
 		
-		if ((this.addr_abs.v & 0xFF00) != (hi << 8)) {
+		if ((this.addr_abs.v & 0xFF00) !== (hi << 8)) {
 			return 1;
 		} else {
 			return 0;
@@ -230,7 +228,7 @@ class nes6502 {
 		this.addr_abs.v = (hi << 8) | lo;
 		this.addr_abs.v += this.y.v;
 		
-		if ((this.addr_abs.v & 0xFF00) != (hi << 8)) {
+		if ((this.addr_abs.v & 0xFF00) !== (hi << 8)) {
 			return 1;
 		} else {
 			return 0;
@@ -245,7 +243,7 @@ class nes6502 {
 		
 		let ptr = new uint16((ptr_hi << 8) | ptr_lo);
 		
-		if (ptr_lo == 0x00FF) { // Simulate page boundary hardware bug
+		if (ptr_lo === 0x00FF) { // Simulate page boundary hardware bug
 			this.addr_abs.v = (this.read(ptr.v & 0xFF00) << 8) | this.read(ptr.v + 0);
 		} else {
 			this.addr_abs.v = (this.read(ptr.v + 1) << 8) | this.read(ptr.v + 0);
@@ -276,7 +274,7 @@ class nes6502 {
 		this.addr_abs.v = (hi << 8) | lo;
 		this.addr_abs.v += this.y.v;
 		
-		if ((this.addr_abs.v & 0xFF00) != (hi << 8)) {
+		if ((this.addr_abs.v & 0xFF00) !== (hi << 8)) {
 			return 1;
 		} else {
 			return 0;
@@ -294,7 +292,7 @@ class nes6502 {
 		
 		this.SetFlag(this.FLAGS6502.C, temp > 255);
 		
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0);
 		
 		this.SetFlag(this.FLAGS6502.V, (~(this.a.v ^ this.fetched.v) & (this.a.v ^ temp)) & 0x0080);
 		
@@ -308,7 +306,7 @@ class nes6502 {
 	AND() {
 		this.fetch();
 		this.a.v = this.a.v & this.fetched.v;
-		this.SetFlag(this.FLAGS6502.Z, this.a.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.a.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.a.v & 0x80);
 		return 1;
 	}
@@ -317,9 +315,9 @@ class nes6502 {
 		this.fetch();
 		let temp = this.fetched.v << 1;
 		this.SetFlag(this.FLAGS6502.C, (temp & 0xFF00) > 0);
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x00);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x80);
-		if (this.lookup[this.opcode.v].addrmode == "IMP") {
+		if (this.lookup[this.opcode.v].addrmode === "IMP") {
 			this.a.v = temp & 0x00FF;
 		} else {
 			this.write(this.addr_abs.v, temp & 0x00FF);
@@ -328,11 +326,11 @@ class nes6502 {
 	}
 	
 	BCC() {
-		if (this.GetFlag(this.FLAGS6502.C) == 0) {
+		if (this.GetFlag(this.FLAGS6502.C) === 0) {
 			this.cycles.v++;
 			this.addr_abs.v = this.pc.v + this.addr_rel.v;
 			
-			if ((this.addr_abs.v & 0xFF00) != (this.pc.v & 0xFF00)) {
+			if ((this.addr_abs.v & 0xFF00) !== (this.pc.v & 0xFF00)) {
 				this.cycles.v++;
 			}
 			
@@ -342,11 +340,11 @@ class nes6502 {
 	}
 	
 	BCS() {
-		if (this.GetFlag(this.FLAGS6502.C) == 1) {
+		if (this.GetFlag(this.FLAGS6502.C) === 1) {
 			this.cycles.v++;
 			this.addr_abs.v = this.pc.v + this.addr_rel.v;
 			
-			if ((this.addr_abs.v & 0xFF00) != (this.pc.v & 0xFF00)) {
+			if ((this.addr_abs.v & 0xFF00) !== (this.pc.v & 0xFF00)) {
 				this.cycles.v++;
 			}
 			
@@ -356,11 +354,11 @@ class nes6502 {
 	}
 	
 	BEQ() {
-		if (this.GetFlag(this.FLAGS6502.Z) == 1) {
+		if (this.GetFlag(this.FLAGS6502.Z) === 1) {
 			this.cycles.v++;
 			this.addr_abs.v = this.pc.v + this.addr_rel.v;
 			
-			if ((this.addr_abs.v & 0xFF00) != (this.pc.v & 0xFF00)) {
+			if ((this.addr_abs.v & 0xFF00) !== (this.pc.v & 0xFF00)) {
 				this.cycles.v++;
 			}
 			
@@ -372,18 +370,18 @@ class nes6502 {
 	BIT() {
 		this.fetch();
 		let temp = this.a.v & this.fetched.v;
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.fetched.v & (1 << 7));
 		this.SetFlag(this.FLAGS6502.V, this.fetched.v & (1 << 6));
 		return 0;
 	}
 	
 	BMI() {
-		if (this.GetFlag(this.FLAGS6502.N) == 1) {
+		if (this.GetFlag(this.FLAGS6502.N) === 1) {
 			this.cycles.v++;
 			this.addr_abs.v = this.pc.v + this.addr_rel.v;
 			
-			if ((this.addr_abs.v & 0xFF00) != (this.pc.v & 0xFF00)) {
+			if ((this.addr_abs.v & 0xFF00) !== (this.pc.v & 0xFF00)) {
 				this.cycles.v++;
 			}
 			
@@ -393,11 +391,11 @@ class nes6502 {
 	}
 	
 	BNE() {
-		if (this.GetFlag(this.FLAGS6502.Z) == 0) {
+		if (this.GetFlag(this.FLAGS6502.Z) === 0) {
 			this.cycles.v++;
 			this.addr_abs.v = this.pc.v + this.addr_rel.v;
 			
-			if ((this.addr_abs.v & 0xFF00) != (this.pc.v & 0xFF00)) {
+			if ((this.addr_abs.v & 0xFF00) !== (this.pc.v & 0xFF00)) {
 				this.cycles.v++;
 			}
 			
@@ -407,11 +405,11 @@ class nes6502 {
 	}
 	
 	BPL() {
-		if (this.GetFlag(this.FLAGS6502.N) == 0) {
+		if (this.GetFlag(this.FLAGS6502.N) === 0) {
 			this.cycles.v++;
 			this.addr_abs.v = this.pc.v + this.addr_rel.v;
 			
-			if ((this.addr_abs.v & 0xFF00) != (this.pc.v & 0xFF00)) {
+			if ((this.addr_abs.v & 0xFF00) !== (this.pc.v & 0xFF00)) {
 				this.cycles.v++;
 			}
 			
@@ -439,11 +437,11 @@ class nes6502 {
 	}
 	
 	BVC() {
-		if (this.GetFlag(this.FLAGS6502.V) == 0) {
+		if (this.GetFlag(this.FLAGS6502.V) === 0) {
 			this.cycles.v++;
 			this.addr_abs.v = this.pc.v + this.addr_rel.v;
 			
-			if ((this.addr_abs.v & 0xFF00) != (this.pc.v & 0xFF00)) {
+			if ((this.addr_abs.v & 0xFF00) !== (this.pc.v & 0xFF00)) {
 				this.cycles.v++;
 			}
 			
@@ -453,11 +451,11 @@ class nes6502 {
 	}
 	
 	BVS() {
-		if (this.GetFlag(this.FLAGS6502.V) == 1) {
+		if (this.GetFlag(this.FLAGS6502.V) === 1) {
 			this.cycles.v++;
 			this.addr_abs.v = this.pc.v + this.addr_rel.v;
 			
-			if ((this.addr_abs.v & 0xFF00) != (this.pc.v & 0xFF00)) {
+			if ((this.addr_abs.v & 0xFF00) !== (this.pc.v & 0xFF00)) {
 				this.cycles.v++;
 			}
 			
@@ -490,7 +488,7 @@ class nes6502 {
 		this.fetch();
 		let temp = this.a.v - this.fetched.v;
 		this.SetFlag(this.FLAGS6502.C, this.a.v >= this.fetched.v);
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x0000);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
 		return 1;
 	}
@@ -499,7 +497,7 @@ class nes6502 {
 		this.fetch();
 		let temp = this.x.v - this.fetched.v;
 		this.SetFlag(this.FLAGS6502.C, this.x.v >= this.fetched.v);
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x0000);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
 		return 0;
 	}
@@ -508,7 +506,7 @@ class nes6502 {
 		this.fetch();
 		let temp = this.y.v - this.fetched.v;
 		this.SetFlag(this.FLAGS6502.C, this.y.v >= this.fetched.v);
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x0000);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
 		return 0;
 	}
@@ -517,21 +515,21 @@ class nes6502 {
 		this.fetch();
 		let temp = this.fetched.v - 1;
 		this.write(this.addr_abs.v, temp & 0x00FF);
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x0000);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
 		return 0;
 	}
 	
 	DEX() {
 		this.x.v--;
-		this.SetFlag(this.FLAGS6502.Z, this.x.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.x.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.x.v & 0x80);
 		return 0;
 	}
 	
 	DEY() {
 		this.y.v--;
-		this.SetFlag(this.FLAGS6502.Z, this.y.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.y.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.y.v & 0x80);
 		return 0;
 	}
@@ -539,7 +537,7 @@ class nes6502 {
 	EOR() {
 		this.fetch();
 		this.a.v = this.a.v ^ this.fetched.v;
-		this.SetFlag(this.FLAGS6502.Z, this.a.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.a.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.a.v & 0x80);
 		return 1;
 	}
@@ -548,21 +546,21 @@ class nes6502 {
 		this.fetch();
 		let temp = this.fetched.v + 1;
 		this.write(this.addr_abs.v, temp & 0x00FF);
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x0000);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
 		return 0;
 	}
 	
 	INX() {
 		this.x.v++;
-		this.SetFlag(this.FLAGS6502.Z, this.x.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.x.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.x.v & 0x80);
 		return 0;
 	}
 	
 	INY() {
 		this.y.v++;
-		this.SetFlag(this.FLAGS6502.Z, this.y.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.y.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.y.v & 0x80);
 		return 0;
 	}
@@ -587,7 +585,7 @@ class nes6502 {
 	LDA() {
 		this.fetch();
 		this.a.v = this.fetched.v;
-		this.SetFlag(this.FLAGS6502.Z, this.a.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.a.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.a.v & 0x80);
 		return 1;
 	}
@@ -595,7 +593,7 @@ class nes6502 {
 	LDX() {
 		this.fetch();
 		this.x.v = this.fetched.v;
-		this.SetFlag(this.FLAGS6502.Z, this.x.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.x.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.x.v & 0x80);
 		return 1;
 	}
@@ -603,7 +601,7 @@ class nes6502 {
 	LDY() {
 		this.fetch();
 		this.y.v = this.fetched.v;
-		this.SetFlag(this.FLAGS6502.Z, this.y.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.y.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.y.v & 0x80);
 		return 1;
 	}
@@ -612,9 +610,9 @@ class nes6502 {
 		this.fetch();
 		this.SetFlag(this.FLAGS6502.C, this.fetched.v & 0x0001);
 		let temp = this.fetched.v >> 1;
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x0000);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
-		if (this.lookup[this.opcode.v].addrmode == "IMP") {
+		if (this.lookup[this.opcode.v].addrmode === "IMP") {
 			this.a.v = temp & 0x00FF;
 		} else {
 			this.write(this.addr_abs.v, temp & 0x00FF);
@@ -639,7 +637,7 @@ class nes6502 {
 	ORA() {
 		this.fetch();
 		this.a.v = this.a.v | this.fetched.v;
-		this.SetFlag(this.FLAGS6502.Z, this.a.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.a.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.a.v & 0x80);
 		return 1;
 	}
@@ -661,7 +659,7 @@ class nes6502 {
 	PLA() {
 		this.stkp.v++;
 		this.a.v = this.read(0x0100 + this.stkp.v);
-		this.SetFlag(this.FLAGS6502.Z, this.a.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.a.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.a.v & 0x80);
 		return 0;
 	}
@@ -677,9 +675,9 @@ class nes6502 {
 		this.fetch();
 		let temp = (this.fetched.v << 1) | this.GetFlag(this.FLAGS6502.C);
 		this.SetFlag(this.FLAGS6502.C, temp & 0xFF00);
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x0000);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
-		if (this.lookup[this.opcode.v].addrmode == "IMP") {
+		if (this.lookup[this.opcode.v].addrmode === "IMP") {
 			this.a.v = temp & 0x00FF;
 		} else {
 			this.write(this.addr_abs.v, temp & 0x00FF);
@@ -691,9 +689,9 @@ class nes6502 {
 		this.fetch();
 		let temp = (this.GetFlag(this.FLAGS6502.C) << 7) | (this.fetched.v >> 1);
 		this.SetFlag(this.FLAGS6502.C, this.fetched.v & 0x01);
-		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, (temp & 0x00FF) === 0x00);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
-		if (this.lookup[this.opcode.v].addrmode == "IMP") {
+		if (this.lookup[this.opcode.v].addrmode === "IMP") {
 			this.a.v = temp & 0x00FF;
 		} else {
 			this.write(this.addr_abs.v, temp & 0x00FF);
@@ -732,7 +730,7 @@ class nes6502 {
 		let temp = this.a.v + value + this.GetFlag(this.FLAGS6502.C);
 		
 		this.SetFlag(this.FLAGS6502.C, temp & 0xFF00);
-		this.SetFlag(this.FLAGS6502.Z, ((temp & 0x00FF) == 0));
+		this.SetFlag(this.FLAGS6502.Z, ((temp & 0x00FF) === 0));
 		this.SetFlag(this.FLAGS6502.V, (temp ^ this.a.v) & (temp ^ value) & 0x0080);
 		this.SetFlag(this.FLAGS6502.N, temp & 0x0080);
 		this.a.v = temp & 0x00FF;
@@ -771,28 +769,28 @@ class nes6502 {
 	
 	TAX() {
 		this.x.v = this.a.v;
-		this.SetFlag(this.FLAGS6502.Z, this.x.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.x.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.x.v & 0x80);
 		return 0;
 	}
 	
 	TAY() {
 		this.y.v = this.a.v;
-		this.SetFlag(this.FLAGS6502.Z, this.y.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.y.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.y.v & 0x80);
 		return 0;
 	}
 	
 	TSX() {
 		this.x.v = this.stkp.v;
-		this.SetFlag(this.FLAGS6502.Z, this.x.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.x.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.x.v & 0x80);
 		return 0;
 	}
 	
 	TXA() {
 		this.a.v = this.x.v;
-		this.SetFlag(this.FLAGS6502.Z, this.a.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.a.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.a.v & 0x80);
 		return 0;
 	}
@@ -804,7 +802,7 @@ class nes6502 {
 	
 	TYA() {
 		this.a.v = this.y.v;
-		this.SetFlag(this.FLAGS6502.Z, this.a.v == 0x00);
+		this.SetFlag(this.FLAGS6502.Z, this.a.v === 0x00);
 		this.SetFlag(this.FLAGS6502.N, this.a.v & 0x80);
 		return 0;
 	}
@@ -814,7 +812,7 @@ class nes6502 {
 	}
 	
 	complete() {
-		return this.cycles.v == 0;
+		return this.cycles.v === 0;
 	}
 	
 	disassemble(start, stop) {
@@ -831,48 +829,48 @@ class nes6502 {
 			let opcode = this.bus.cpuRead(addr, true); addr++;
 			sInst += this.lookup[opcode].name + " ";
 			
-			if (this.lookup[opcode].addrmode == "IMP") {
+			if (this.lookup[opcode].addrmode === "IMP") {
 				sInst += " {IMP}";
-			} else if (this.lookup[opcode].addrmode == "IMM") {
+			} else if (this.lookup[opcode].addrmode === "IMM") {
 				value = this.bus.cpuRead(addr, true); addr++;
 				sInst += "#$" + hex(value, 2) + " {IMM}";
-			} else if (this.lookup[opcode].addrmode == "ZP0") {
+			} else if (this.lookup[opcode].addrmode === "ZP0") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = 0x00;												
 				sInst += "$" + hex(lo, 2) + " {ZP0}";
-			} else if (this.lookup[opcode].addrmode == "ZPX") {
+			} else if (this.lookup[opcode].addrmode === "ZPX") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = 0x00;														
 				sInst += "$" + hex(lo, 2) + ", X {ZPX}";
-			} else if (this.lookup[opcode].addrmode == "ZPY") {
+			} else if (this.lookup[opcode].addrmode === "ZPY") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = 0x00;														
 				sInst += "$" + hex(lo, 2) + ", Y {ZPY}";
-			} else if (this.lookup[opcode].addrmode == "IZX") {
+			} else if (this.lookup[opcode].addrmode === "IZX") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = 0x00;								
 				sInst += "($" + hex(lo, 2) + ", X) {IZX}";
-			} else if (this.lookup[opcode].addrmode == "IZY") {
+			} else if (this.lookup[opcode].addrmode === "IZY") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = 0x00;								
 				sInst += "($" + hex(lo, 2) + "), Y {IZY}";
-			} else if (this.lookup[opcode].addrmode == "ABS") {
+			} else if (this.lookup[opcode].addrmode === "ABS") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = this.bus.cpuRead(addr, true); addr++;
 				sInst += "$" + hex((hi << 8) | lo, 4) + " {ABS}";
-			} else if (this.lookup[opcode].addrmode == "ABX") {
+			} else if (this.lookup[opcode].addrmode === "ABX") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = this.bus.cpuRead(addr, true); addr++;
 				sInst += "$" + hex((hi << 8) | lo, 4) + ", X {ABX}";
-			} else if (this.lookup[opcode].addrmode == "ABY") {
+			} else if (this.lookup[opcode].addrmode === "ABY") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = this.bus.cpuRead(addr, true); addr++;
 				sInst += "$" + hex((hi << 8) | lo, 4) + ", Y {ABY}";
-			} else if (this.lookup[opcode].addrmode == "IND") {
+			} else if (this.lookup[opcode].addrmode === "IND") {
 				lo = this.bus.cpuRead(addr, true); addr++;
 				hi = this.bus.cpuRead(addr, true); addr++;
 				sInst += "($" + hex((hi << 8) | lo, 4) + ") {IND}";
-			} else if (this.lookup[opcode].addrmode == "REL") {
+			} else if (this.lookup[opcode].addrmode === "REL") {
 				value = this.bus.cpuRead(addr, true); addr++;
 				sInst += "$" + hex(value, 2) + " [$" + hex(addr + uncomplement(value & 0x00FF, 8), 4) + "] {REL}";
 			}

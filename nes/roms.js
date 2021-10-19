@@ -8,5 +8,6 @@ const nesroms = {
 	"smb3.nes": SMB3_ROM,
 	"zelda.nes": ZELDA_ROM,
 	"ducktales.nes": DUCKTALES_ROM,
-	"smbduckhunt.nes": SMBDUCKHUNT_ROM
+	"smbduckhunt.nes": SMBDUCKHUNT_ROM,
+	"bad_apple_2.nes": BADAPPLE_ROM
 }

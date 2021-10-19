@@ -82,6 +82,8 @@ function start() {
 
 let totalFrameTime = 0;
 
+let tempColor = new Color(0, 0, 0);
+
 function update(elapsedTime) {
 	Clear(colors.DARK_BLUE);
 	
@@ -99,12 +101,13 @@ function update(elapsedTime) {
 		if (residualTime > 0) {
 			residualTime -= elapsedTime;
 		} else {
+			//const t0 = performance.now();
 			residualTime += (1000 / 60) - elapsedTime;
-			const t0 = performance.now();
+			
 			do { nes.clock(); } while (!nes.ppu.frame_complete);
 			nes.ppu.frame_complete = false;
-			const t1 = performance.now();
-			totalFrameTime = t1 - t0;
+			//const t1 = performance.now();
+			//totalFrameTime = t1 - t0;
 		}
 	} else {
 		if (pressedKeys["c"]) {
@@ -122,15 +125,15 @@ function update(elapsedTime) {
 		}
 	}
 	
-	DrawString(516+178, 12, totalFrameTime);
-	DrawString(516+178+18, 2, elapsedTime - Math.floor(totalFrameTime));
+	//DrawString(516+178, 12, nes.ppu.clockTime);
+	DrawString(516+178+18, 2, elapsedTime, elapsedTime > 16 ? colors.RED : colors.WHITE);
 	
 	if (pressedKeys["r"]) nes.reset();
 	if (pressedKeys[" "]) emulationRun = !emulationRun;
 	
 	if (pressedKeys["p"]) selectedPalette = (++selectedPalette) & 0x07;
 	
-	DrawCpu(516, 2);
+	/*DrawCpu(516, 2);
 	//DrawCode(516, 72, 26);
 	
 	for (let i = 0; i < 26; i++) {
@@ -152,7 +155,8 @@ function update(elapsedTime) {
 	DrawRect(516 + selectedPalette * (swatchSize * 5) - 1, 339, (swatchSize * 4), swatchSize, colors.WHITE);
 	
 	DrawSprite(516, 348, nes.ppu.GetPatternTable(0, selectedPalette));
-	DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));
-
+	DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));*/
+	
+	//DrawRam(0, 0, 0x0400, 32, 16);
 	DrawSprite(0, 0, nes.ppu.GetScreen(), 1);
 }

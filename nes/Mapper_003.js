@@ -15,7 +15,7 @@ class Mapper_003 extends Mapper {
 	
 	cpuMapWrite(addr, mapped_addr, data) {
 		if (addr >= 0x8000 && addr <= 0xFFFF) {
-			this.CHRBankSelect = data & 0x03;
+			this.CHRBankSelect = data.v & 0x03;
 			mapped_addr.v = addr;
 		}
 		
