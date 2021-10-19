@@ -69,7 +69,7 @@ function DrawCode(x, y, lines) {
 function start() {
 	width = 780;
 	height = 480;
-	cart = new Cartridge("bad_apple_2.nes");
+	cart = new Cartridge("smb3.nes");
 	
 	nes.insertCartridge(cart);
 	

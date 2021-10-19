@@ -203,6 +203,10 @@ class Mapper_004 extends Mapper {
 		return this.mirrormode;
 	}
 	
+	irqState() {
+		return this.IRQActive;
+	}
+	
 	irqClear() {
 		this.IRQActive = false;
 	}
