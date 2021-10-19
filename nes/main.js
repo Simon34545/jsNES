@@ -2,7 +2,7 @@ let cart = null;
 let nes = new Bus();
 let mapAsm = [];
 
-let emulationRun = false;
+let emulationRun = true;
 let residualTime = 0;
 
 let selectedPalette = 0x00;
