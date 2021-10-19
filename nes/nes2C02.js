@@ -811,12 +811,7 @@ class loopy_register {
 
 class PPUSTATUS {
 	get reg() {
-		let un = this.unused;
-		let so = this.sprite_overflow;
-		let sz = this.sprite_zero_hit;
-		let vb = this.vertical_blank;
-		
-		return (un << 0) | (so << 5) | (sz << 6) | (vb << 7);
+		return (this.unused << 0) | (this.sprite_overflow << 5) | (this.sprite_zero_hit << 6) | (this.vertical_blank << 7);
 	}
 	
 	set reg(v) {
@@ -831,26 +826,14 @@ class PPUSTATUS {
 	}
 	
 	unused = 0b00000;
-	
 	sprite_overflow  = 0b0;
-	
 	sprite_zero_hit  = 0b0;
-	
 	vertical_blank = 0b0;
 }
 
 class PPUMASK {
-	get reg() {
-		let gs = this.grayscale;
-		let bl = this.render_background_left;
-		let sl = this.render_sprites_left;
-		let rb = this.render_background;
-		let rs = this.render_sprites;
-		let er = this.enhance_red;
-		let eg = this.enhance_green;
-		let eb = this.enhance_blue;
-		
-		return (gs << 0) | (bl << 1) | (sl << 2) | (rb << 3) | (rs << 4) | (er << 5) | (eg << 6) | (eb << 7);
+	get reg() {		
+		return (this.grayscale << 0) | (this.render_background_left << 1) | (this.render_sprites_left << 2) | (this.render_background << 3) | (this.render_sprites << 4) | (this.enhance_red << 5) | (this.enhance_green << 6) | (this.enhance_blue << 7);
 	}
 	
 	set reg(v) {
@@ -869,34 +852,18 @@ class PPUMASK {
 	}
 	
 	grayscale = 0b0;
-	
 	render_background_left = 0b0;
-	
 	render_sprites_left = 0b0;
-	
 	render_background = 0b0;
-	
 	render_sprites = 0b0;
-	
 	enhance_red = 0b0;
-	
 	enhance_green = 0b0;
-	
 	enhance_blue = 0b0;
 }
 
 class PPUCTRL {
 	get reg() {
-		let nx = this.nametable_x;
-		let ny = this.nametable_y;
-		let im = this.increment_mode;
-		let ps = this.pattern_sprite;
-		let pb = this.pattern_background;
-		let ss = this.sprite_size;
-		let sm = this.slave_mode;
-		let en = this.enable_nmi;
-		
-		return (nx << 0) | (ny << 1) | (im << 2) | (ps << 3) | (pb << 4) | (ss << 5) | (sm << 6) | (en << 7);
+		return (this.nametable_x << 0) | (this.nametable_y << 1) | (this.increment_mode << 2) | (this.pattern_sprite << 3) | (this.pattern_background << 4) | (this.sprite_size << 5) | (this.slave_mode << 6) | (this.enable_nmi << 7);
 	}
 	
 	set reg(v) {
@@ -915,18 +882,11 @@ class PPUCTRL {
 	}
 	
 	nametable_x = 0b0;
-	
 	nametable_y = 0b0;
-	
 	increment_mode = 0b0;
-	
 	pattern_sprite = 0b0;
-	
 	pattern_background = 0b0;
-	
 	sprite_size = 0b0;
-	
 	slave_mode = 0b0;
-	
 	enable_nmi = 0b0;
 }

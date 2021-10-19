@@ -69,7 +69,7 @@ function DrawCode(x, y, lines) {
 function start() {
 	width = 780;
 	height = 480;
-	cart = new Cartridge("smb.nes");
+	cart = new Cartridge("bad_apple_2.nes");
 	
 	nes.insertCartridge(cart);
 	
@@ -133,7 +133,7 @@ function update(elapsedTime) {
 	
 	if (pressedKeys["p"]) selectedPalette = (++selectedPalette) & 0x07;
 	
-	/*DrawCpu(516, 2);
+	DrawCpu(516, 2);
 	//DrawCode(516, 72, 26);
 	
 	for (let i = 0; i < 26; i++) {
@@ -154,8 +154,8 @@ function update(elapsedTime) {
 	
 	DrawRect(516 + selectedPalette * (swatchSize * 5) - 1, 339, (swatchSize * 4), swatchSize, colors.WHITE);
 	
-	DrawSprite(516, 348, nes.ppu.GetPatternTable(0, selectedPalette));
-	DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));*/
+	//DrawSprite(516, 348, nes.ppu.GetPatternTable(0, selectedPalette));
+	//DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));
 	
 	//DrawRam(0, 0, 0x0400, 32, 16);
 	DrawSprite(0, 0, nes.ppu.GetScreen(), 1);
