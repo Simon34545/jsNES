@@ -66,33 +66,86 @@ function DrawCode(x, y, lines) {
 	}
 }
 
+let selecting = true;
+let selection = "smb.nes";
+
 function start() {
 	width = 780;
 	height = 480;
-	cart = new Cartridge("smb2.nes");
+	//cart = new Cartridge("smb2.nes");
 	
-	nes.insertCartridge(cart);
+	//nes.insertCartridge(cart);
 	
 	//mapAsm = nes.cpu.disassemble(0x0000, 0xFFFF);
 	nes.SetSampleFrequency(audioContext.sampleRate);
 	
-	nes.reset();
+	//nes.reset();
 	return true;
 }
 
 function SoundOut() {
-	while (!nes.clock()) {};
+	if (!selecting) while (!nes.clock()) {};
 	return nes.audioSample;
 }
 
 function update(elapsedTime) {
-	nes.SetSampleFrequency(audioContext.sampleRate * speed);
-	EmulatorUpdateWithAudio(elapsedTime);
+	if (selecting) {
+		Clear(colors.BLACK);
+		DrawString(64, 64, "Select a rom: ", colors.WHITE, 2);
+		let off = 32;
+		
+		let found_selection = false;
+		let next_selection = undefined;
+		
+		let first_rom = undefined;
+		let found_first = false;
+		
+		for (const rom in nesroms) {
+			if (!found_first) {
+				first_rom = rom;
+				found_first = true;
+			}
+			
+			if (found_selection) {
+				next_selection = rom;
+				found_selection = false;
+			}
+			
+			if (selection == rom) {
+				DrawString(64 + 16, 64 + off, ">", colors.WHITE, 2);
+				found_selection = true;
+			}
+			
+			DrawString(64 + 32, 64 + off, rom, (selection == rom) ? colors.WHITE : colors.DARK_GREY, 2);
+			off += 20
+		}
+		
+		if (pressedKeys["Shift"]) {
+			if (next_selection) {
+				selection = next_selection;
+			} else {
+				selection = first_rom;
+			}
+		}
+		
+		if (pressedKeys["Enter"]) {
+			cart = new Cartridge(selection);
+	
+			nes.insertCartridge(cart);
+			
+			nes.SetSampleFrequency(audioContext.sampleRate);
+			
+			nes.reset();
+			selecting = false;
+		}
+	} else {
+		nes.SetSampleFrequency(audioContext.sampleRate * speed);
+		EmulatorUpdateWithAudio(elapsedTime);
+	}
 }
 
 function EmulatorUpdateWithAudio(elapsedTime) {
-	if (!nes.ppu.frame_complete) return;
-	nes.ppu.frame_complete = false;
+	//if (!nes.ppu.status.vertical_blank) return;
 	Clear(colors.DARK_BLUE);
 	
 	nes.controller[0] = 0x00;

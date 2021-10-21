@@ -33,11 +33,37 @@ let colors = {
 
 class Sprite {
 	imgdata = null;
+	pixels = null;
 	
 	constructor(width = 200, height = 50) {
 		this.width = width;
 		this.height = height;
 		this.imgdata = new ImageData(width, height);
+		this.pixels = new Array(width).fill().map(u => { return new Array(height).fill().map(v => { return new Color(); }); });
+	}
+	
+	LoadPixels() {
+		for (let x = 0; x < this.width; x++) {
+			for (let y = 0; y < this.height; y++) {
+				let i = y * (this.width * 4) + x * 4;
+				this.pixels[x][y].r = this.imgdata.data[i + 0];
+				this.pixels[x][y].g = this.imgdata.data[i + 1];
+				this.pixels[x][y].b = this.imgdata.data[i + 2];
+				this.pixels[x][y].a = this.imgdata.data[i + 3];
+			}
+		}
+	}
+	
+	UpdatePixels() {
+		for (let x = 0; x < this.width; x++) {
+			for (let y = 0; y < this.height; y++) {
+				let i = y * (this.width * 4) + x * 4;
+				this.imgdata.data[i + 0] = this.pixels[x][y].r;
+				this.imgdata.data[i + 1] = this.pixels[x][y].g;
+				this.imgdata.data[i + 2] = this.pixels[x][y].b;
+				this.imgdata.data[i + 3] = this.pixels[x][y].a;
+			}
+		}
 	}
 	
 	SetPixel(x, y, c) {
@@ -48,6 +74,15 @@ class Sprite {
 		this.imgdata.data[i + 1] = c.g;
 		this.imgdata.data[i + 2] = c.b;
 		this.imgdata.data[i + 3] = c.a;
+	}
+	
+	SetPixelNew(x, y, c) {
+		if (x < 0 || y < 0) return;
+		if (x >= this.width || y >= this.height) return;
+		this.pixels[x][y].r = c.r;
+		this.pixels[x][y].g = c.g;
+		this.pixels[x][y].b = c.b;
+		this.pixels[x][y].a = c.a;
 	}
 	
 	GetPixel(x, y) {
