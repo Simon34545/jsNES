@@ -69,7 +69,7 @@ function DrawCode(x, y, lines) {
 function start() {
 	width = 780;
 	height = 480;
-	cart = new Cartridge("smb2.nes");
+	cart = new Cartridge("zelda.nes");
 	
 	nes.insertCartridge(cart);
 	
@@ -86,7 +86,6 @@ function SoundOut() {
 }
 
 function update(elapsedTime) {
-	nes.SetSampleFrequency(audioContext.sampleRate * speed);
 	EmulatorUpdateWithAudio(elapsedTime);
 }
 
@@ -96,14 +95,14 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	Clear(colors.DARK_BLUE);
 	
 	nes.controller[0] = 0x00;
-	nes.controller[0] |= heldKeys["x"]|| heldKeys["l"] ? 0x80 : 0x00;
-	nes.controller[0] |= heldKeys["z"]|| heldKeys[","] ? 0x40 : 0x00;
-	nes.controller[0] |= heldKeys["Shift"] ? 0x20 : 0x00;
-	nes.controller[0] |= heldKeys["Enter"] ? 0x10 : 0x00;
-	nes.controller[0] |= heldKeys["ArrowUp"] || heldKeys["w"] ? 0x08 : 0x00;
-	nes.controller[0] |= heldKeys["ArrowDown"] || heldKeys["s"] ? 0x04 : 0x00;
-	nes.controller[0] |= heldKeys["ArrowLeft"] || heldKeys["a"] ? 0x02 : 0x00;
-	nes.controller[0] |= heldKeys["ArrowRight"] || heldKeys["d"] ? 0x01 : 0x00;
+	nes.controller[0] |= heldKeys["x"] ? 0x80 : 0x00;
+	nes.controller[0] |= heldKeys["z"] ? 0x40 : 0x00;
+	nes.controller[0] |= heldKeys["a"] ? 0x20 : 0x00;
+	nes.controller[0] |= heldKeys["s"] ? 0x10 : 0x00;
+	nes.controller[0] |= heldKeys["ArrowUp"] ? 0x08 : 0x00;
+	nes.controller[0] |= heldKeys["ArrowDown"] ? 0x04 : 0x00;
+	nes.controller[0] |= heldKeys["ArrowLeft"] ? 0x02 : 0x00;
+	nes.controller[0] |= heldKeys["ArrowRight"] ? 0x01 : 0x00;
 	
 	DrawString(516+178+18, 2, elapsedTime, elapsedTime > 16.66 ? (elapsedTime > 18 ? (elapsedTime > 20 ? colors.RED : colors.DARK_YELLOW) : colors.YELLOW) : colors.GREEN);
 	

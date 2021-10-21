@@ -68,8 +68,6 @@ class Bus {
 			this.data.v = this.cpuRam[addr & 0x07FF];
 		} else if (addr >= 0x2000 && addr <= 0x3FFF) {
 			this.data.v = this.ppu.cpuRead(addr & 0x0007, readOnly);
-		} else if ((addr >= 0x4000 && addr <= 0x4013) || addr == 0x4015 || addr == 0x4017) {
-			this.data.v = this.apu.cpuRead(addr, readOnly);
 		} else if (addr >= 0x4016 && addr <= 0x4017) {
 			this.data.v = (this.controller_state[addr & 0x0001] & 0x80) > 0;
 			this.controller_state[addr & 0x0001] <<= 1;
@@ -130,11 +128,6 @@ class Bus {
 			this.audioTime -= this.audioTimePerSystemSample;
 			this.audioSample = this.apu.GetOutputSample();
 			audioSampleReady = true;
-		}
-		
-		if (this.apu.irq_flag) {
-			this.apu.irq_flag = false;
-			this.cpu.irq();
 		}
 		
 		if (this.ppu.nmi) {
