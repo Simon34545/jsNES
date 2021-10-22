@@ -76,9 +76,11 @@ class Cartridge {
 			} else {
 				this.CHRMemory = new Uint8Array(this.CHRBanks * 8192);
 			}
+			
 			for (let i = 0; i < this.CHRMemory.length; i++) {
 				this.CHRMemory[i] = file[read_idx + i];
 			}
+			
 			read_idx += this.CHRMemory.length;
 		}
 		
@@ -140,7 +142,7 @@ class Cartridge {
 	ppuWrite(addr, data) {
 		this.mapped_addr.v = 0;
 		if (this.mapper.ppuMapWrite(addr, this.mapped_addr)) {
-			this.CHRMemory[this.mapped_addr.v] = data;
+			this.CHRMemory[this.mapped_addr.v] = data.v;
 			return true;
 		} else {
 			return false;

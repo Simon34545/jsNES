@@ -69,6 +69,9 @@ function DrawCode(x, y, lines) {
 let selecting = true;
 let selection = "smb.nes";
 
+let speeds = [1, 3, 6, 12, 25, 50, 75, 100, 150, 200, 300, 400, 800, 1600, 3200, 6400];
+let selectedspeed = 5;
+
 function start() {
 	width = 780;
 	height = 480;
@@ -120,6 +123,19 @@ function update(elapsedTime) {
 			off += 20
 		}
 		
+		DrawString(512, 64, "Emulation speed: ", colors.WHITE, 1);
+		DrawString(512, 84, "<", selectedspeed ? colors.WHITE : colors.DARK_GREY, 1);
+		DrawString(630, 84, ">", selectedspeed < speeds.length - 1 ? colors.WHITE : colors.DARK_GREY, 1);
+		DrawString(564, 84, speeds[selectedspeed] + '%', colors.WHITE, 1);
+		
+		if (pressedKeys["a"] || pressedKeys["ArrowLeft"]) {
+			selectedspeed = Math.max(0, selectedspeed - 1);
+		}
+		
+		if (pressedKeys["d"] || pressedKeys["ArrowRight"]) {
+			selectedspeed = Math.min(speeds.length - 1, selectedspeed + 1);
+		}
+		
 		if (pressedKeys["Shift"]) {
 			if (next_selection) {
 				selection = next_selection;
@@ -129,6 +145,8 @@ function update(elapsedTime) {
 		}
 		
 		if (pressedKeys["Enter"]) {
+			speed = 1 / (speeds[selectedspeed] / 100);
+			
 			cart = new Cartridge(selection);
 	
 			nes.insertCartridge(cart);
@@ -148,6 +166,16 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	//if (!nes.ppu.status.vertical_blank) return;
 	Clear(colors.DARK_BLUE);
 	
+	if (pressedKeys["-"] || pressedKeys["_"]) {
+		selectedspeed = Math.max(0, selectedspeed - 1);
+	}
+		
+	if (pressedKeys["="] || pressedKeys["+"]) {
+		selectedspeed = Math.min(speeds.length - 1, selectedspeed + 1);
+	}
+	
+	speed = 1 / (speeds[selectedspeed] / 100);
+	
 	nes.controller[0] = 0x00;
 	nes.controller[0] |= heldKeys["x"]|| heldKeys["l"] ? 0x80 : 0x00;
 	nes.controller[0] |= heldKeys["z"]|| heldKeys[","] ? 0x40 : 0x00;
@@ -166,6 +194,8 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	
 	DrawCpu(516, 2);
 	//DrawCode(516, 72, 26);
+	
+	DrawString(516, 62, "Emulation speed: " + speeds[selectedspeed] + "%", colors.WHITE, 1);
 	
 	for (let i = 0; i < 26; i++) {
 		let s = hex(i, 2) + ": (" + nes.ppu.pOAM(i * 4 + 3).toString()
