@@ -33,65 +33,42 @@ let colors = {
 
 class Sprite {
 	imgdata = null;
-	pixels = null;
+	
+	buf = null;
+	buf8 = null;
+	data = null;
 	
 	constructor(width = 200, height = 50) {
 		this.width = width;
 		this.height = height;
 		this.imgdata = new ImageData(width, height);
-		this.pixels = new Array(width).fill().map(u => { return new Array(height).fill().map(v => { return new Color(); }); });
-	}
-	
-	LoadPixels() {
-		for (let x = 0; x < this.width; x++) {
-			for (let y = 0; y < this.height; y++) {
-				let i = y * (this.width * 4) + x * 4;
-				this.pixels[x][y].r = this.imgdata.data[i + 0];
-				this.pixels[x][y].g = this.imgdata.data[i + 1];
-				this.pixels[x][y].b = this.imgdata.data[i + 2];
-				this.pixels[x][y].a = this.imgdata.data[i + 3];
-			}
-		}
+		
+		this.buf = new ArrayBuffer(width * height * 4);
+		this.buf8 = new Uint8ClampedArray(this.buf);
+		this.data = new Uint32Array(this.buf);
 	}
 	
 	UpdatePixels() {
-		for (let x = 0; x < this.width; x++) {
-			for (let y = 0; y < this.height; y++) {
-				let i = y * (this.width * 4) + x * 4;
-				this.imgdata.data[i + 0] = this.pixels[x][y].r;
-				this.imgdata.data[i + 1] = this.pixels[x][y].g;
-				this.imgdata.data[i + 2] = this.pixels[x][y].b;
-				this.imgdata.data[i + 3] = this.pixels[x][y].a;
-			}
-		}
+		this.imgdata.data.set(this.buf8);
 	}
 	
 	SetPixel(x, y, c) {
 		if (x < 0 || y < 0) return;
 		if (x >= this.width || y >= this.height) return;
-		let i = y * (this.width * 4) + x * 4;
-		this.imgdata.data[i + 0] = c.r;
-		this.imgdata.data[i + 1] = c.g;
-		this.imgdata.data[i + 2] = c.b;
-		this.imgdata.data[i + 3] = c.a;
-	}
-	
-	SetPixelNew(x, y, c) {
-		if (x < 0 || y < 0) return;
-		if (x >= this.width || y >= this.height) return;
-		this.pixels[x][y].r = c.r;
-		this.pixels[x][y].g = c.g;
-		this.pixels[x][y].b = c.b;
-		this.pixels[x][y].a = c.a;
+		this.data[y * this.width + x] = 
+			(c.a << 24) |
+			(c.b << 16) |
+			(c.g <<  8) |
+			 c.r;
 	}
 	
 	GetPixel(x, y) {
 		let i = y * (this.width * 4) + x * 4;
 		let c = new Color();
-		c.r = this.imgdata.data[i + 0];
-		c.g = this.imgdata.data[i + 1];
-		c.b = this.imgdata.data[i + 2];
-		c.a = this.imgdata.data[i + 3];
+		c.r = this.buf8[i + 0];
+		c.g = this.buf8[i + 1];
+		c.b = this.buf8[i + 2];
+		c.a = this.buf8[i + 3];
 		return c;
 	}
 }
@@ -127,6 +104,7 @@ function DrawSprite(x, y, sprite, scale = 1) {
 	if (scale != 1) {
 		ctx.putImageData(scaleImageData(sprite.imgdata, scale), x, y);
 	} else {
+		sprite.UpdatePixels();
 		ctx.putImageData(sprite.imgdata, x, y);
 	}
 }

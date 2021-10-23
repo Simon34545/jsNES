@@ -7,6 +7,8 @@ class INSTRUCTION {
 	}
 }
 
+let ptr = new uint16();
+
 class nes6502 {
 	FLAGS6502 = {
 		C: (1 << 0),
@@ -241,7 +243,7 @@ class nes6502 {
 		let ptr_hi = this.read(this.pc.v);
 		this.pc.v++;
 		
-		let ptr = new uint16((ptr_hi << 8) | ptr_lo);
+		ptr.v = (ptr_hi << 8) | ptr_lo;
 		
 		if (ptr_lo === 0x00FF) { // Simulate page boundary hardware bug
 			this.addr_abs.v = (this.read(ptr.v & 0xFF00) << 8) | this.read(ptr.v + 0);

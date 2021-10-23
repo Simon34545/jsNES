@@ -319,7 +319,7 @@ class nes2A03 {
 				this.resetWait = -2;
 			}*/
 			
-			if (this.cpu_clock_counter % 2 == 0) {
+			if (!(this.cpu_clock_counter & 1)) {
 				this.frame_clock_counter++;
 				
 				/*quarterFrameClock = this.mirqWroteTo;

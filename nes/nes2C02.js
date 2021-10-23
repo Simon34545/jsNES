@@ -64,7 +64,7 @@ class nes2C02 {
 	vram_addr = new loopy_register();
 	tram_addr = new loopy_register();
 	
-	fine_x = new uint8();
+	fine_x = 0x00;
 	
 	bg_next_tile_id = 0x00;
 	bg_next_tile_attrib = 0x00;
@@ -194,7 +194,7 @@ class nes2C02 {
 	}
 	
 	reset() {
-		this.fine_x.v = 0x00;
+		this.fine_x = 0x00;
 		this.address_latch = 0x00;
 		this.ppu_data_buffer = 0x00;
 		this.scanline = 0;
@@ -353,7 +353,7 @@ class nes2C02 {
 				this.TransferAddressY();
 			}
 			
-			// Foreground Rendering
+			//Foreground Rendering
 			if (this.cycle === 257 && this.scanline >= 0) {
 				this.spriteScanline.forEach(function(e){e.reset(0xFF)});
 				this.sprite_count = 0;
@@ -457,7 +457,7 @@ class nes2C02 {
 		let bg_palette = 0x00;
 		
 		if (this.mask.render_background) {
-			let bit_mux = 0x8000 >> this.fine_x.v;
+			let bit_mux = 0x8000 >> this.fine_x;
 			
 			let p0_pixel = (this.bg_shifter_pattern_lo & bit_mux) > 0 ? 1 : 0;
 			let p1_pixel = (this.bg_shifter_pattern_hi & bit_mux) > 0 ? 1 : 0;
@@ -518,7 +518,7 @@ class nes2C02 {
 			
 			if (this.spriteZeroHitPossible && this.spriteZeroBeingRendered) {
 				if (this.mask.render_background & this.mask.render_sprites) {
-					if (~(this.mask.render_background_left | this.mask.render_sprites_left)) {
+					if (!(this.mask.render_background_left | this.mask.render_sprites_left)) {
 						if (this.cycle >= 9 && this.cycle < 258) {
 							this.status.sprite_zero_hit = 1;
 						}
@@ -628,7 +628,7 @@ class nes2C02 {
 			break;
 		case 0x0005: // Scroll
 			if (this.address_latch === 0) {
-				this.fine_x.v = data & 0x07;
+				this.fine_x = data & 0x07;
 				this.tram_addr.coarse_x = data >> 3;
 				this.address_latch = 1;
 			} else {
@@ -653,42 +653,43 @@ class nes2C02 {
 			break;
 		}
 	}
+	data = new uint8();
 	
 	ppuRead(addr, rdonly = false) {
-		let data = new uint8();
+		this.data.v = 0;
 		addr &= 0x3FFF;
 		
-		if (this.cart.ppuRead(addr, data)) {
+		if (this.cart.ppuRead(addr, this.data)) {
 			
 		} else if (addr >= 0x0000 && addr <= 0x1FFF) {
-			data.v = this.tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF];
+			this.data.v = this.tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF];
 		} else if (addr >= 0x2000 && addr <= 0x3EFF) {
 			addr &= 0x0FFF;
 			if (this.cart.Mirror() === MIRROR.VERTICAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
-					data.v = this.tblName[0][addr & 0x03FF];
+					this.data.v = this.tblName[0][addr & 0x03FF];
 				}
 				if (addr >= 0x0400 && addr <= 0x07FF) {
-					data.v = this.tblName[1][addr & 0x03FF];
+					this.data.v = this.tblName[1][addr & 0x03FF];
 				}
 				if (addr >= 0x0800 && addr <= 0x0BFF) {
-					data.v = this.tblName[0][addr & 0x03FF];
+					this.data.v = this.tblName[0][addr & 0x03FF];
 				}
 				if (addr >= 0x0C00 && addr <= 0x0FFF) {
-					data.v = this.tblName[1][addr & 0x03FF];
+					this.data.v = this.tblName[1][addr & 0x03FF];
 				}
 			} else if (this.cart.Mirror() === MIRROR.HORIZONTAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
-					data.v = this.tblName[0][addr & 0x03FF];
+					this.data.v = this.tblName[0][addr & 0x03FF];
 				}
 				if (addr >= 0x0400 && addr <= 0x07FF) {
-					data.v = this.tblName[0][addr & 0x03FF];
+					this.data.v = this.tblName[0][addr & 0x03FF];
 				}
 				if (addr >= 0x0800 && addr <= 0x0BFF) {
-					data.v = this.tblName[1][addr & 0x03FF];
+					this.data.v = this.tblName[1][addr & 0x03FF];
 				}
 				if (addr >= 0x0C00 && addr <= 0x0FFF) {
-					data.v = this.tblName[1][addr & 0x03FF];
+					this.data.v = this.tblName[1][addr & 0x03FF];
 				}
 			}
 		} else if (addr >= 0x3F00 && addr <= 0x3FFF) {
@@ -697,47 +698,47 @@ class nes2C02 {
 			if (addr === 0x0014) addr = 0x0004;
 			if (addr === 0x0018) addr = 0x0008;
 			if (addr === 0x001C) addr = 0x000C;
-			data.v = this.tblPalette[addr];
+			this.data.v = this.tblPalette[addr];
 		}
 		
-		return data.v;
+		return this.data.v;
 	}
 	
 	ppuWrite(addr, data) {
 		addr &= 0x3FFF;
-		data = new uint8(data);
+		this.data.v = data;
 		
-		if (this.cart.ppuWrite(addr, data)) {
+		if (this.cart.ppuWrite(addr, this.data)) {
 			
 		} else if (addr >= 0x0000 && addr <= 0x1FFF) {
-			this.tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF] = data.v;
+			this.tblPattern[(addr & 0x1000) >> 12][addr & 0x0FFF] = this.data.v;
 		} else if (addr >= 0x2000 && addr <= 0x3EFF) {
 			addr &= 0x0FFF;
 			if (this.cart.Mirror() === MIRROR.VERTICAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
-					this.tblName[0][addr & 0x03FF] = data.v;
+					this.tblName[0][addr & 0x03FF] = this.data.v;
 				}
 				if (addr >= 0x0400 && addr <= 0x07FF) {
-					this.tblName[1][addr & 0x03FF] = data.v;
+					this.tblName[1][addr & 0x03FF] = this.data.v;
 				}
 				if (addr >= 0x0800 && addr <= 0x0BFF) {
-					this.tblName[0][addr & 0x03FF] = data.v;
+					this.tblName[0][addr & 0x03FF] = this.data.v;
 				}
 				if (addr >= 0x0C00 && addr <= 0x0FFF) {
-					this.tblName[1][addr & 0x03FF] = data.v;
+					this.tblName[1][addr & 0x03FF] = this.data.v;
 				}
 			} else if (this.cart.Mirror() === MIRROR.HORIZONTAL) {
 				if (addr >= 0x0000 && addr <= 0x03FF) {
-					this.tblName[0][addr & 0x03FF] = data.v;
+					this.tblName[0][addr & 0x03FF] = this.data.v;
 				}
 				if (addr >= 0x0400 && addr <= 0x07FF) {
-					this.tblName[0][addr & 0x03FF] = data.v;
+					this.tblName[0][addr & 0x03FF] = this.data.v;
 				}
 				if (addr >= 0x0800 && addr <= 0x0BFF) {
-					this.tblName[1][addr & 0x03FF] = data.v;
+					this.tblName[1][addr & 0x03FF] = this.data.v;
 				}
 				if (addr >= 0x0C00 && addr <= 0x0FFF) {
-					this.tblName[1][addr & 0x03FF] = data.v;
+					this.tblName[1][addr & 0x03FF] = this.data.v;
 				}
 			}
 		} else if (addr >= 0x3F00 && addr <= 0x3FFF) {
@@ -746,7 +747,7 @@ class nes2C02 {
 			if (addr === 0x0014) addr = 0x0004;
 			if (addr === 0x0018) addr = 0x0008;
 			if (addr === 0x001C) addr = 0x000C;
-			this.tblPalette[addr] = data.v;
+			this.tblPalette[addr] = this.data.v;
 		}
 	}
 }
@@ -754,7 +755,7 @@ class nes2C02 {
 class ObjectAttributeEntry {
 	y = 0x00;
 	id = 0x00;
-	attribute =0x00;
+	attribute = 0x00;
 	x = 0x00;
 	
 	reset(value = 0x00) {
