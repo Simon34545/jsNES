@@ -87,6 +87,7 @@ class Bus {
 		this.cart.reset();
 		this.cpu.reset();
 		this.ppu.reset();
+		this.cpuWrite(0x4015, 0x00);
 		this.systemClockCounter = 0;
 		this.dma_page = 0x00;
 		this.dma_addr = 0x00;

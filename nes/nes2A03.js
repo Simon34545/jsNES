@@ -265,7 +265,7 @@ class nes2A03 {
 			
 		case 0x400F:
 			if (this.pnoise_cnt.enable) this.pnoise_cnt.counter = this.length_lookup[(data & 0xF8) >> 3];			
-			this.pnoise_cnt.start = 1;
+			this.pnoise_env.start = 1;
 			break;
 			
 		case 0x4015:
@@ -431,7 +431,7 @@ class nes2A03 {
 				}
 			}
 			
-			if (this.triang_lnc.counter != 0 && this.triang_cnt != 0) {
+			if (this.triang_lnc.counter != 0 && this.triang_cnt.counter != 0) {
 				this.triang_seq.clock(function(s) {
 					if (s.new_seq == 0) {
 						s.seq_pos--;
@@ -476,7 +476,7 @@ class nes2A03 {
 		this.pulse2_swp.channel = this.pulse2_seq;
 		this.pulse2_swp.which = 0;
 		
-		this.triang_seq.seq_pos = 16;
+		this.triang_seq.seq_pos = 0;
 	}
 	
 	resetWait = -2;

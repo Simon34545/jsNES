@@ -197,7 +197,7 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	
 	DrawString(516, 62, "Emulation speed: " + speeds[selectedspeed] + "%", colors.WHITE, 1);
 	
-	for (let i = 0; i < 26; i++) {
+	/*for (let i = 0; i < 26; i++) {
 		let s = hex(i, 2) + ": (" + nes.ppu.pOAM(i * 4 + 3).toString()
 			+ ", " + nes.ppu.pOAM(i * 4 + 0).toString() + ") "
 			+ "ID: " + hex(nes.ppu.pOAM(i * 4 + 1), 2)
@@ -211,9 +211,9 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 			FillRect(516 + p * (swatchSize * 5) + s * swatchSize, 340,
 				swatchSize, swatchSize, nes.ppu.GetColorFromPaletteRam(p, s));
 		}
-	}
+	}*/
 	
-	DrawRect(516 + selectedPalette * (swatchSize * 5) - 1, 339, (swatchSize * 4), swatchSize, colors.WHITE);
+	//DrawRect(516 + selectedPalette * (swatchSize * 5) - 1, 339, (swatchSize * 4), swatchSize, colors.WHITE);
 	
 	//DrawSprite(516, 348, nes.ppu.GetPatternTable(0, selectedPalette));
 	//DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));

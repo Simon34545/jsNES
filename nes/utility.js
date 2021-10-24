@@ -102,6 +102,7 @@ function scaleImageData(imageData, scale) {
 
 function DrawSprite(x, y, sprite, scale = 1) {
 	if (scale != 1) {
+		sprite.UpdatePixels();
 		ctx.putImageData(scaleImageData(sprite.imgdata, scale), x, y);
 	} else {
 		sprite.UpdatePixels();
