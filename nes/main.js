@@ -23,23 +23,23 @@ function DrawRam(x, y, addr, rows, columns) {
 function DrawCpu(x, y) {
 	let status = "STATUS: ";
 	DrawString(x, y , "STATUS:", colors.WHITE);
-	DrawString(x + 64, y, "N", nes.cpu.status.v & nes.cpu.FLAGS6502.N ? colors.GREEN : colors.RED);
-	DrawString(x + 80, y , "V", nes.cpu.status.v & nes.cpu.FLAGS6502.V ? colors.GREEN : colors.RED);
-	DrawString(x + 96, y , "-", nes.cpu.status.v & nes.cpu.FLAGS6502.U ? colors.GREEN : colors.RED);
-	DrawString(x + 112, y , "B", nes.cpu.status.v & nes.cpu.FLAGS6502.B ? colors.GREEN : colors.RED);
-	DrawString(x + 128, y , "D", nes.cpu.status.v & nes.cpu.FLAGS6502.D ? colors.GREEN : colors.RED);
-	DrawString(x + 144, y , "I", nes.cpu.status.v & nes.cpu.FLAGS6502.I ? colors.GREEN : colors.RED);
-	DrawString(x + 160, y , "Z", nes.cpu.status.v & nes.cpu.FLAGS6502.Z ? colors.GREEN : colors.RED);
-	DrawString(x + 178, y , "C", nes.cpu.status.v & nes.cpu.FLAGS6502.C ? colors.GREEN : colors.RED);
-	DrawString(x, y + 10, "PC: $" + hex(nes.cpu.pc.v, 4));
-	DrawString(x, y + 20, "A: $" +  hex(nes.cpu.a.v, 2) + "  [" + nes.cpu.a.v + "]");
-	DrawString(x, y + 30, "X: $" +  hex(nes.cpu.x.v, 2) + "  [" + nes.cpu.x.v + "]");
-	DrawString(x, y + 40, "Y: $" +  hex(nes.cpu.y.v, 2) + "  [" + nes.cpu.y.v + "]");
-	DrawString(x, y + 50, "Stack P: $" + hex(nes.cpu.stkp.v, 4));
+	DrawString(x + 64, y, "N", nes.cpu.status & nes.cpu.FLAGS6502.N ? colors.GREEN : colors.RED);
+	DrawString(x + 80, y , "V", nes.cpu.status & nes.cpu.FLAGS6502.V ? colors.GREEN : colors.RED);
+	DrawString(x + 96, y , "-", nes.cpu.status & nes.cpu.FLAGS6502.U ? colors.GREEN : colors.RED);
+	DrawString(x + 112, y , "B", nes.cpu.status & nes.cpu.FLAGS6502.B ? colors.GREEN : colors.RED);
+	DrawString(x + 128, y , "D", nes.cpu.status & nes.cpu.FLAGS6502.D ? colors.GREEN : colors.RED);
+	DrawString(x + 144, y , "I", nes.cpu.status & nes.cpu.FLAGS6502.I ? colors.GREEN : colors.RED);
+	DrawString(x + 160, y , "Z", nes.cpu.status & nes.cpu.FLAGS6502.Z ? colors.GREEN : colors.RED);
+	DrawString(x + 178, y , "C", nes.cpu.status & nes.cpu.FLAGS6502.C ? colors.GREEN : colors.RED);
+	DrawString(x, y + 10, "PC: $" + hex(nes.cpu.pc, 4));
+	DrawString(x, y + 20, "A: $" +  hex(nes.cpu.a, 2) + "  [" + nes.cpu.a + "]");
+	DrawString(x, y + 30, "X: $" +  hex(nes.cpu.x, 2) + "  [" + nes.cpu.x + "]");
+	DrawString(x, y + 40, "Y: $" +  hex(nes.cpu.y, 2) + "  [" + nes.cpu.y + "]");
+	DrawString(x, y + 50, "Stack P: $" + hex(nes.cpu.stkp, 4));
 }
 
 function DrawCode(x, y, lines) {
-	let it_a = mapAsm.findNext(nes.cpu.pc.v);
+	let it_a = mapAsm.findNext(nes.cpu.pc);
 	let lineY = (lines >> 1) * 10 + y;
 	if (it_a != mapAsm.length) {
 		DrawString(x, lineY, mapAsm[it_a], colors.CYAN);
@@ -52,7 +52,7 @@ function DrawCode(x, y, lines) {
 		}
 	}
 	
-	it_a = mapAsm.findNext(nes.cpu.pc.v);
+	it_a = mapAsm.findNext(nes.cpu.pc);
 	lineY = (lines >> 1) * 10 + y;
 	if (it_a != mapAsm.length) {
 		DrawString(x, lineY, mapAsm[it_a], colors.CYAN);
@@ -67,7 +67,7 @@ function DrawCode(x, y, lines) {
 }
 
 let selecting = true;
-let selection = "smb.nes";
+let selection = localStorage.getItem('selection') || "Select a file";
 
 let speeds = [1, 3, 6, 12, 25, 50, 75, 100, 150, 200, 300, 400, 800, 1600, 3200, 6400];
 let selectedspeed = 5;
@@ -145,16 +145,54 @@ function update(elapsedTime) {
 		}
 		
 		if (pressedKeys["Enter"]) {
-			speed = 1 / (speeds[selectedspeed] / 100);
-			
-			cart = new Cartridge(selection);
-	
-			nes.insertCartridge(cart);
-			
-			nes.SetSampleFrequency(audioContext.sampleRate);
-			
-			nes.reset();
-			selecting = false;
+			if (selection == "Select a file") {
+				let input = document.createElement('input');
+				input.accept = '.nes';
+				input.multiple = false;
+				input.type = 'file';
+				
+				input.onchange = e => { 
+					let file = e.target.files[0]; 
+					let name = file.name;
+					
+					let reader = new FileReader();
+					
+					reader.onload = readerEvent => {
+						speed = 1 / (speeds[selectedspeed] / 100);
+						
+						let romData = new Uint8Array(readerEvent.target.result);
+						localStorage.setItem('roms', romStorage + name + '/');
+						localStorage.setItem(name, window.btoa(romData));
+						localStorage.setItem('selection', name);
+						
+						cart = new Cartridge(romData);
+						
+						nes.insertCartridge(cart);
+						
+						nes.SetSampleFrequency(audioContext.sampleRate);
+						
+						nes.reset();
+						selecting = false;
+					}
+					
+					reader.readAsArrayBuffer(file);
+				}
+				
+				input.click();
+			} else {
+				speed = 1 / (speeds[selectedspeed] / 100);
+				
+				cart = new Cartridge(nesroms[selection]);
+				
+				localStorage.setItem('selection', selection);
+				
+				nes.insertCartridge(cart);
+				
+				nes.SetSampleFrequency(audioContext.sampleRate);
+				
+				nes.reset();
+				selecting = false;
+			}
 		}
 	} else {
 		nes.SetSampleFrequency(audioContext.sampleRate * speed);

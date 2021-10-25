@@ -550,8 +550,10 @@ class nes2C02 {
 		}
 	}
 	
+	obdata = 0x00;
+	
 	cpuRead(addr, rdonly = false) {
-		let data = 0x00;
+		let data = this.obdata;
 		
 		if (rdonly) {
 			switch (addr) {
@@ -609,6 +611,7 @@ class nes2C02 {
 	}
 	
 	cpuWrite(addr, data) {
+		this.obdata = data;
 		switch (addr) {
 		case 0x0000: // Control
 			this.control.reg = data;
@@ -653,6 +656,7 @@ class nes2C02 {
 			break;
 		}
 	}
+	
 	data = new uint8();
 	
 	ppuRead(addr, rdonly = false) {

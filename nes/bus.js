@@ -42,6 +42,7 @@ class Bus {
 	
 	cpuWrite(addr, data) {
 		this.data.v = data;
+		addr &= 0xFFFF;
 		if (this.cart.cpuWrite(addr, this.data)) {
 			
 		} else if (addr >= 0x0000 && addr <= 0x1FFF) {
@@ -60,19 +61,22 @@ class Bus {
 	}
 	
 	cpuRead(addr, readOnly = false) {
+		let temp = this.data.v;
 		this.data.v = 0;
-		
+		addr &= 0xFFFF;
 		if (this.cart.cpuRead(addr, this.data)) {
 			
 		} else if (addr >= 0x0000 && addr <= 0x1FFF) {
 			this.data.v = this.cpuRam[addr & 0x07FF];
 		} else if (addr >= 0x2000 && addr <= 0x3FFF) {
 			this.data.v = this.ppu.cpuRead(addr & 0x0007, readOnly);
-		} else if ((addr >= 0x4000 && addr <= 0x4013) || addr == 0x4015 || addr == 0x4017) {
-			this.data.v = this.apu.cpuRead(addr, readOnly);
+		} else if (addr == 0x4015) {
+			this.data.v = this.apu.cpuRead(addr, readOnly, temp);
 		} else if (addr >= 0x4016 && addr <= 0x4017) {
 			this.data.v = (this.controller_state[addr & 0x0001] & 0x80) > 0;
 			this.controller_state[addr & 0x0001] <<= 1;
+		} else {
+			this.data.v = temp;
 		}
 		
 		return this.data.v;

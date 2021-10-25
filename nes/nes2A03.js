@@ -68,8 +68,8 @@ class sweeper {
 		let changeAmount = this.channel.reload >> this.shift_count;
 		if (this.negate) {
 			changeAmount *= -1;
+			changeAmount -= this.which;
 		}
-		changeAmount -= this.which;
 		
 		this.target_period = this.channel.reload + changeAmount;
 		
@@ -79,7 +79,7 @@ class sweeper {
 			this.mute = 0;
 		}
 		
-		if (this.divider == 0 && this.enable && !this.mute) {
+		if (this.divider == 0 && this.enable && !this.mute && this.shift_count !== 0) {
 			this.channel.reload = this.target_period;
 		}
 		
@@ -175,6 +175,7 @@ class nes2A03 {
 			this.pulse1_swp.shift_count = data & 0x7;
 			
 			this.pulse1_swp.reload_flag = 1;
+			console.log(data.toString(2).padStart(8, '0'))
 			break;
 			
 		case 0x4002:

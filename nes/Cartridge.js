@@ -21,8 +21,7 @@ class Cartridge {
 	mapper = null;
 	hw_mirror = 0;
 	
-	constructor(fileName) {
-		let file = nesroms[fileName];
+	constructor(file) {
 		let read_idx = 0;
 		
 		let header = new Header();

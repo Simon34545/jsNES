@@ -1,4 +1,4 @@
-const audioContext = new AudioContext({latencyHint: "interactive", sampleRate: 44100});
+const audioContext = new AudioContext({latencyHint: "interactive", sampleRate: 44100/4});
 
 let nesSoundEngine;
 let soundReady = false;
