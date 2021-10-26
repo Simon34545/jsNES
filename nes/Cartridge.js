@@ -21,6 +21,9 @@ class Cartridge {
 	mapper = null;
 	hw_mirror = 0;
 	
+	imageValid = false;
+	errorCode = 'An error occured while loading the rom!';
+	
 	constructor(file) {
 		let read_idx = 0;
 		
@@ -55,7 +58,7 @@ class Cartridge {
 		this.hw_mirror = (header.mapper1.v & 0x01) ? MIRROR.VERTICAL : MIRROR.HORIZONTAL;
 		
 		let fileType = 1;
-		if ((header.mapper2.v & 0x0C) == 0x08) console.log('type 2');
+		if ((header.mapper2.v & 0x0C) == 0x08) fileType = 2;
 		
 		if (fileType == 0) {
 			
@@ -84,7 +87,19 @@ class Cartridge {
 		}
 		
 		if (fileType == 2) {
+			this.PRGBanks = ((header.prg_ram_size.v & 0x07) << 8) | header.prg_rom_chunks.v;
+			this.PRGMemory = new Uint8Array(this.PRGBanks * 16384);
+			for (let i = 0; i < this.PRGMemory.length; i++) {
+				this.PRGMemory[i] = file[read_idx + i];
+			}
+			read_idx += this.PRGMemory.length;
 			
+			this.CHRBanks = ((header.prg_ram_size.v & 0x38) << 8) | header.prg_rom_chunks.v;
+			this.CHRMemory = new Uint8Array(this.CHRBanks * 8192);
+			for (let i = 0; i < this.CHRMemory.length; i++) {
+				this.CHRMemory[i] = file[read_idx + i];
+			}
+			read_idx += this.CHRMemory.length;
 		}
 		
 		switch(this.mapperID) {
@@ -93,8 +108,12 @@ class Cartridge {
 		case  2: this.mapper = new Mapper_002(this.PRGBanks, this.CHRBanks); break;
 		case  3: this.mapper = new Mapper_003(this.PRGBanks, this.CHRBanks); break;
 		case  4: this.mapper = new Mapper_004(this.PRGBanks, this.CHRBanks); break;
+		case 31: this.mapper = new Mapper_031(this.PRGBanks, this.CHRBanks); break;
 		case 66: this.mapper = new Mapper_066(this.PRGBanks, this.CHRBanks); break;
+		default: this.errorCode = 'Mapper ' + this.mapperID + ' not supported!'; return;
 		}
+		
+		this.imageValid = true;
 	}
 	
 	mapped_addr = new uint32();

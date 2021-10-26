@@ -91,10 +91,15 @@ function SoundOut() {
 	return nes.audioSample;
 }
 
+let errorCode = '';
+
 function update(elapsedTime) {
 	if (selecting) {
 		Clear(colors.BLACK);
 		DrawString(64, 64, "Select a rom: ", colors.WHITE, 2);
+		DrawString(64, 32, errorCode, colors.RED, 2);
+		let space = localStorageSpace();
+		DrawString(16, 450, "Used " + Math.ceil(space.used/1024) + " KB out of 5120 KB. " + Math.ceil(space.left/1024) + " KB remaining.", colors.WHITE, 2);
 		let off = 32;
 		
 		let found_selection = false;
@@ -121,6 +126,36 @@ function update(elapsedTime) {
 			
 			DrawString(64 + 32, 64 + off, rom, (selection == rom) ? colors.WHITE : colors.DARK_GREY, 2);
 			off += 20
+		}
+		
+		if (selection != "Select a file") {
+			DrawString(580, 360, "Selection:", colors.WHITE, 1);
+			DrawString(580, 370, "ROM File Size: " + Math.ceil(localStorage.getItem(selection).length / 512) + " KB", colors.WHITE, 1);
+			DrawString(580, 380, "ROM Save Size: " + (localStorage.hasOwnProperty(selection + 'save') ? Math.ceil(localStorage.getItem(selection + 'save').length / 512) + " KB" : "N/A"), colors.WHITE, 1);
+			DrawString(580, 390, "Press backspace to delete", colors.WHITE, 1);
+			if (localStorage.hasOwnProperty(selection + 'save')) {
+				DrawString(580, 400, "Press the delete key to delete save.", colors.WHITE, 1);
+			}
+			
+			if (pressedKeys["Backspace"]) {
+				localStorage.removeItem(selection);
+				if (localStorage.hasOwnProperty(selection + 'save')) {
+					localStorage.removeItem(selection + 'save');
+				}
+				let roms = romStorage.split('/');
+				roms.splice(roms.indexOf(selection), 1);
+				romStorage = roms.join('/');
+				if (romStorage[romStorage.length - 1] != '/') {
+					romStorage += '/';
+				}
+				localStorage.setItem('roms', romStorage);
+				delete nesroms[selection];
+				selection = "Select a file";
+				localStorage.setItem('selection', selection);
+				if (romStorage == '/') {
+					localStorage.clear();
+				}
+			}
 		}
 		
 		DrawString(512, 64, "Emulation speed: ", colors.WHITE, 1);
@@ -161,18 +196,33 @@ function update(elapsedTime) {
 						speed = 1 / (speeds[selectedspeed] / 100);
 						
 						let romData = new Uint8Array(readerEvent.target.result);
-						localStorage.setItem('roms', romStorage + name + '/');
-						localStorage.setItem(name, window.btoa(romData));
-						localStorage.setItem('selection', name);
 						
 						cart = new Cartridge(romData);
 						
-						nes.insertCartridge(cart);
-						
-						nes.SetSampleFrequency(audioContext.sampleRate);
-						
-						nes.reset();
-						selecting = false;
+						if (cart.imageValid) {
+							let filestr = window.btoa(romData);
+							let savestr = '';
+							if (cart.mapperID == 1) {
+								savestr = window.btoa(new Uint8Array(32 * 1024).map(e => { return 255; }) );
+							}
+							
+							if (Math.ceil((filestr + savestr).length / 512) <= space.left) {
+								localStorage.setItem('roms', romStorage + name + '/');
+								localStorage.setItem(name, filestr);
+								localStorage.setItem('selection', name);
+							} else {
+								alert('File will not be added to the list because it is too large! (Size: ' + Math.ceil((filestr + savestr).length / 512) + ' KB, Space remaining: ' + space.left + ' KB)');
+							}
+							
+							nes.insertCartridge(cart);
+							
+							nes.SetSampleFrequency(audioContext.sampleRate);
+							
+							nes.reset();
+							selecting = false;
+						} else {
+							errorCode = 'Error: ' + cart.errorCode;
+						}
 					}
 					
 					reader.readAsArrayBuffer(file);
@@ -186,12 +236,20 @@ function update(elapsedTime) {
 				
 				localStorage.setItem('selection', selection);
 				
-				nes.insertCartridge(cart);
-				
-				nes.SetSampleFrequency(audioContext.sampleRate);
-				
-				nes.reset();
-				selecting = false;
+				if (cart.imageValid) {
+					if (localStorage.hasOwnProperty(selection + 'save')) {
+						cart.mapper.RAMStatic = window.atob(localStorage.getItem(selection + 'save')).split(',');
+					}
+					
+					nes.insertCartridge(cart);
+					
+					nes.SetSampleFrequency(audioContext.sampleRate);
+					
+					nes.reset();
+					selecting = false;
+				} else {
+					errorCode = 'Error: ' + cart.errorCode;
+				}
 			}
 		}
 	} else {
@@ -234,6 +292,13 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	//DrawCode(516, 72, 26);
 	
 	DrawString(516, 62, "Emulation speed: " + speeds[selectedspeed] + "%", colors.WHITE, 1);
+	
+	if (nes.cart.mapperID == 1) {
+		DrawString(516, 72, "Press F to save game.", colors.WHITE, 1);
+		if (pressedKeys["f"]) {
+			localStorage.setItem(selection + 'save', window.btoa(cart.mapper.RAMStatic));
+		}
+	}
 	
 	/*for (let i = 0; i < 26; i++) {
 		let s = hex(i, 2) + ": (" + nes.ppu.pOAM(i * 4 + 3).toString()
@@ -307,26 +372,9 @@ function EmulatorUpdateWithoutAudio(elapsedTime) {
 	
 	if (pressedKeys["p"]) selectedPalette = (++selectedPalette) & 0x07;
 	
+	mapAsm = nes.cpu.disassemble(0x0000, 0xFFFF);
 	DrawCpu(516, 2);
-	//DrawCode(516, 72, 26);
-	
-	for (let i = 0; i < 26; i++) {
-		let s = hex(i, 2) + ": (" + nes.ppu.pOAM(i * 4 + 3).toString()
-			+ ", " + nes.ppu.pOAM(i * 4 + 0).toString() + ") "
-			+ "ID: " + hex(nes.ppu.pOAM(i * 4 + 1), 2)
-			+" AT: " + hex(nes.ppu.pOAM(i * 4 + 2), 2);	
-		DrawString(516, 72 + i * 10, s);
-	}
-	
-	let swatchSize = 6;
-	for (let p = 0; p < 8; p++) {
-		for (let s = 0; s < 4; s++) {
-			FillRect(516 + p * (swatchSize * 5) + s * swatchSize, 340,
-				swatchSize, swatchSize, nes.ppu.GetColorFromPaletteRam(p, s));
-		}
-	}
-	
-	DrawRect(516 + selectedPalette * (swatchSize * 5) - 1, 339, (swatchSize * 4), swatchSize, colors.WHITE);
+	DrawCode(516, 72, 26);
 	
 	//DrawSprite(516, 348, nes.ppu.GetPatternTable(0, selectedPalette));
 	//DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));

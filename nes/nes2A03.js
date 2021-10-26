@@ -22,7 +22,7 @@ class sequencer {
 
 class envelope {
 	start = 0;
-	divider = 0;
+	volume = 0;
 	reload = 0;
 	decay_counter = 0;
 	loop = 0;
@@ -31,22 +31,19 @@ class envelope {
 	clock() {
 		if (this.start) {
 			this.start = 0;
-			this.decay_counter = 15;
-			this.divider = this.reload;
+			this.decay_counter = this.reload;
+			this.volume = 0xF;
 		} else {
-			if (this.divider == 0) {
-				this.divider = this.reload;
-				
-				if (this.decay_counter == 0) {
-					if (this.loop) {
-						this.decay_counter = 15;
-					}
+			if (this.decay_counter == 0) {
+				this.decay_counter = this.reload;
+				if (this.volume > 0) {
+					this.volume--;
 				} else {
-					this.decay_counter--;
+					this.volume = this.loop ? 0xF : 0;
 				}
+			} else {
+				this.decay_counter--;
 			}
-			
-			this.divider--;
 		}
 	}
 }
@@ -175,7 +172,6 @@ class nes2A03 {
 			this.pulse1_swp.shift_count = data & 0x7;
 			
 			this.pulse1_swp.reload_flag = 1;
-			console.log(data.toString(2).padStart(8, '0'))
 			break;
 			
 		case 0x4002:
@@ -267,6 +263,10 @@ class nes2A03 {
 		case 0x400F:
 			if (this.pnoise_cnt.enable) this.pnoise_cnt.counter = this.length_lookup[(data & 0xF8) >> 3];			
 			this.pnoise_env.start = 1;
+			break;
+			
+		case 0x4011:
+			this.dmcout_sample = data & 0x7F;
 			break;
 			
 		case 0x4015:
@@ -406,7 +406,7 @@ class nes2A03 {
 				});
 				
 				if (this.pulse1_seq.output && !this.pulse1_swp.mute && this.pulse1_cnt.counter && this.pulse1_seq.reload > 7) {
-					this.pulse1_sample = this.pulse1_env.constant ? this.pulse1_env.reload : this.pulse1_env.decay_counter;
+					this.pulse1_sample = this.pulse1_env.constant ? this.pulse1_env.reload : this.pulse1_env.volume;
 				} else {
 					this.pulse1_sample = 0;
 				}
@@ -418,7 +418,7 @@ class nes2A03 {
 				});
 				
 				if (this.pulse2_seq.output && !this.pulse2_swp.mute && this.pulse2_cnt.counter && this.pulse1_seq.reload > 7) {
-					this.pulse2_sample = this.pulse2_env.constant ? this.pulse2_env.reload : this.pulse2_env.decay_counter;
+					this.pulse2_sample = this.pulse2_env.constant ? this.pulse2_env.reload : this.pulse2_env.volume;
 				} else {
 					this.pulse2_sample = 0;
 				}
@@ -426,7 +426,7 @@ class nes2A03 {
 				this.pnoise_lfs.clock();
 				
 				if (!(this.pnoise_lfs.shift_register & 0x1) && this.pnoise_cnt.counter) {
-					this.pnoise_sample = this.pnoise_env.constant ? this.pnoise_env.reload : this.pnoise_env.decay_counter;
+					this.pnoise_sample = this.pnoise_env.constant ? this.pnoise_env.reload : this.pnoise_env.volume;
 				} else {
 					this.pnoise_sample = 0;
 				}
@@ -465,7 +465,7 @@ class nes2A03 {
 	
 	GetOutputSample() {
 		let pulse_out = (95.98) / ((8128 / (this.pulse1_sample + this.pulse2_sample)) + 100);
-		let tnd_out = (159.79) / (((1) / ((this.triang_sample / 8227) + (this.pnoise_sample / 12241) + (0 / 22638))) + 100);
+		let tnd_out = (159.79) / (((1) / ((this.triang_sample / 8227) + (this.pnoise_sample / 12241) + (this.dmcout_sample / 22638))) + 100);
 		
 		return pulse_out + tnd_out;
 	}
@@ -520,4 +520,6 @@ class nes2A03 {
 	pnoise_env = new envelope();
 	pnoise_cnt = new length_counter();
 	pnoise_sample = 0;
+	
+	dmcout_sample = 0;
 }

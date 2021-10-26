@@ -229,3 +229,16 @@ function flipbyte(b) {
 	b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
 	return b;
 }
+
+function localStorageSpace() {
+	var data = '';
+	
+	for (const key in localStorage){
+		if (localStorage.hasOwnProperty(key)){
+			data += localStorage[key];
+			//console.log( key + " = " + ((window.localStorage[key].length * 16)/(8 * 1024)).toFixed(2) + ' KB' );
+		}
+	}
+	
+	return {used: ((data.length * 16)/8), left: (5242880 - ((data.length * 16)/8))};
+};
