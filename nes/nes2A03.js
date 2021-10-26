@@ -62,7 +62,7 @@ class sweeper {
 	channel = null;
 	
 	clock() {
-		let changeAmount = this.channel.reload >> this.shift_count;
+		/*let changeAmount = this.channel.reload >> this.shift_count;
 		if (this.negate) {
 			changeAmount *= -1;
 			changeAmount -= this.which;
@@ -85,6 +85,35 @@ class sweeper {
 			this.reload_flag = 0;
 		} else {
 			this.divider--;
+		}*/
+		// i still cant figure out why my code sometimes doesnt work (specifically, when dying in super mario bros)
+		// for now ill just use the code from https://github.com/bfirsh/jsnes/blob/master/src/papu.js
+		if (--this.divider <= 0) {
+			this.divider = this.period + 1;
+			if (
+				this.enable &&
+				this.shift_count > 0 &&
+				this.channel.reload > 7
+			) {
+				this.mute = 0;
+				if (this.negate === 0) {
+					this.channel.reload += this.channel.reload >> this.shift_count;
+					if (this.channel.reload > 4095) {
+						this.channel.reload = 4095;
+						this.mute = 1;
+					}
+				} else {
+					this.channel.reload =
+						this.channel.reload -
+						((this.channel.reload >> this.shift_count) -
+							(this.which ? 1 : 0));
+				}
+			}
+		}
+		
+		if (this.reload_flag) {
+			this.reload_flag = 0;
+			this.divider = this.period + 1;
 		}
 	}
 }
