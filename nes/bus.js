@@ -32,12 +32,33 @@ class Bus {
 	audioTimePerSystemSample = 0;
 	audioTimePerNESClock = 0;
 	
-	constructor() {
-		for (let i = 0; i < this.cpuRam.length; i++) {
-			this.cpuRam[i] = 0x00;
-		}
-		
+	constructor() {		
 		this.cpu.ConnectBus(this);
+		
+		this.apu.cpuWrite(0x4017, 0x00);
+		this.apu.cpuWrite(0x4015, 0x00);
+		
+		this.apu.cpuWrite(0x4000, 0x00);
+		this.apu.cpuWrite(0x4001, 0x00);
+		this.apu.cpuWrite(0x4002, 0x00);
+		this.apu.cpuWrite(0x4003, 0x00);
+		this.apu.cpuWrite(0x4004, 0x00);
+		this.apu.cpuWrite(0x4005, 0x00);
+		this.apu.cpuWrite(0x4006, 0x00);
+		this.apu.cpuWrite(0x4007, 0x00);
+		this.apu.cpuWrite(0x4008, 0x00);
+		this.apu.cpuWrite(0x4009, 0x00);
+		this.apu.cpuWrite(0x400A, 0x00);
+		this.apu.cpuWrite(0x400B, 0x00);
+		this.apu.cpuWrite(0x400C, 0x00);
+		this.apu.cpuWrite(0x400D, 0x00);
+		this.apu.cpuWrite(0x400E, 0x00);
+		this.apu.cpuWrite(0x400F, 0x00);
+		
+		this.apu.cpuWrite(0x4010, 0x00);
+		this.apu.cpuWrite(0x4011, 0x00);
+		this.apu.cpuWrite(0x4012, 0x00);
+		this.apu.cpuWrite(0x4013, 0x00);
 	}
 	
 	cpuWrite(addr, data) {
@@ -91,6 +112,7 @@ class Bus {
 		this.cart.reset();
 		this.cpu.reset();
 		this.ppu.reset();
+		this.apu.reset();
 		this.cpuWrite(0x4015, 0x00);
 		this.systemClockCounter = 0;
 		this.dma_page = 0x00;

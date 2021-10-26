@@ -108,6 +108,7 @@ class Cartridge {
 		case  2: this.mapper = new Mapper_002(this.PRGBanks, this.CHRBanks); break;
 		case  3: this.mapper = new Mapper_003(this.PRGBanks, this.CHRBanks); break;
 		case  4: this.mapper = new Mapper_004(this.PRGBanks, this.CHRBanks); break;
+		case  7: this.mapper = new Mapper_007(this.PRGBanks, this.CHRBanks); break;
 		case 31: this.mapper = new Mapper_031(this.PRGBanks, this.CHRBanks); break;
 		case 66: this.mapper = new Mapper_066(this.PRGBanks, this.CHRBanks); break;
 		default: this.errorCode = 'Mapper ' + this.mapperID + ' not supported!'; return;

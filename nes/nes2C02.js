@@ -546,6 +546,8 @@ class nes2C02 {
 			if (this.scanline >= 261) {
 				this.scanline = -1;
 				this.frame_complete = true;
+				//vsync, disable for now
+				//this.sprScreen.UpdatePixels();
 			}
 		}
 	}

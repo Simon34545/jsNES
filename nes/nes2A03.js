@@ -137,7 +137,7 @@ class length_counter {
 class linear_counter {
 	counter = 0;
 	reload = 0;
-	reload_flag = 0;
+	reload_flag = 1;
 	control = 0;
 	
 	clock() {
@@ -154,7 +154,7 @@ class linear_counter {
 }
 
 class lfsr {
-	shift_register = 0x0001;
+	shift_register = 0x0000;
 	mode = 0;
 	timer = 0;
 	reload = 0;
@@ -169,6 +169,7 @@ class lfsr {
 			this.shift_register >>= 1;
 			this.shift_register |= feedback << 14;
 		}
+		if (this.shift_register == 0) this.shift_register = 1;
 	}
 }
 
@@ -489,7 +490,10 @@ class nes2A03 {
 	}
 	
 	reset() {
+		this.triang_seq.new_seq = 1;
+		this.triang_seq.seq_pos = 15;
 		
+		this.dmcout_sample &= 0x1;
 	}
 	
 	GetOutputSample() {
@@ -505,8 +509,6 @@ class nes2A03 {
 		
 		this.pulse2_swp.channel = this.pulse2_seq;
 		this.pulse2_swp.which = 0;
-		
-		this.triang_seq.seq_pos = 0;
 	}
 	
 	resetWait = -2;
@@ -526,7 +528,7 @@ class nes2A03 {
 	irq_inhb = 0;
 	
 	clock_counter = 0;
-	frame_clock_counter = 0;
+	frame_clock_counter = 15;
 	
 	pulse1_seq = new sequencer();
 	pulse1_env = new envelope();

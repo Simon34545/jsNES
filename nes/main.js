@@ -134,7 +134,13 @@ function update(elapsedTime) {
 			DrawString(580, 380, "ROM Save Size: " + (localStorage.hasOwnProperty(selection + 'save') ? Math.ceil(localStorage.getItem(selection + 'save').length / 512) + " KB" : "N/A"), colors.WHITE, 1);
 			DrawString(580, 390, "Press backspace to delete", colors.WHITE, 1);
 			if (localStorage.hasOwnProperty(selection + 'save')) {
-				DrawString(580, 400, "Press the delete key to delete save.", colors.WHITE, 1);
+				DrawString(580, 400, "Press the delete key to ", colors.WHITE, 1);
+				DrawString(580, 410, "delete save.", colors.WHITE, 1);
+				if (pressedKeys["Delete"]) {
+					if (localStorage.hasOwnProperty(selection + 'save')) {
+						localStorage.removeItem(selection + 'save');
+					}
+				}
 			}
 			
 			if (pressedKeys["Backspace"]) {
@@ -207,8 +213,10 @@ function update(elapsedTime) {
 							}
 							
 							if (Math.ceil((filestr + savestr).length / 512) <= space.left) {
-								localStorage.setItem('roms', romStorage + name + '/');
 								localStorage.setItem(name, filestr);
+								if (!nesroms.hasOwnProperty(selection)) {
+									localStorage.setItem('roms', romStorage + name + '/');
+								}
 								localStorage.setItem('selection', name);
 							} else {
 								alert('File will not be added to the list because it is too large! (Size: ' + Math.ceil((filestr + savestr).length / 512) + ' KB, Space remaining: ' + space.left + ' KB)');
@@ -321,7 +329,7 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	//DrawSprite(516, 348, nes.ppu.GetPatternTable(0, selectedPalette));
 	//DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));
 	
-	DrawSprite(0, 0, nes.ppu.GetScreen(), 1);
+	DrawSprite(0, 0, nes.ppu.GetScreen(), 1, true);
 }
 
 function EmulatorUpdateWithoutAudio(elapsedTime) {

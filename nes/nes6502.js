@@ -22,9 +22,9 @@ class nes6502 {
 	a = 0x00;
 	x = 0x00;
 	y = 0x00;
-	stkp = 0x00;
+	stkp = 0xFD;
 	pc = 0x0000;
-	status = 0x00;
+	status = 0x34;
 	
 	bus = null;
 	fetched = 0x00;
@@ -1618,11 +1618,8 @@ class nes6502 {
 	}
 	
 	reset() {
-		this.a = 0;
-		this.x = 0;
-		this.y = 0;
-		this.stkp = 0xFD;
-		this.status = 0x00;// | this.FLAGS6502.U;
+		this.stkp -= 3;
+		this.status |= 0x04;
 		
 		this.addr_abs = 0xFFFC;
 		let lo = this.read(this.addr_abs + 0);

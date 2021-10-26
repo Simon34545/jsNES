@@ -100,12 +100,12 @@ function scaleImageData(imageData, scale) {
   return scaled;
 }
 
-function DrawSprite(x, y, sprite, scale = 1) {
+function DrawSprite(x, y, sprite, scale = 1, autoUpdate = true) {
 	if (scale != 1) {
-		sprite.UpdatePixels();
+		if (autoUpdate) sprite.UpdatePixels();
 		ctx.putImageData(scaleImageData(sprite.imgdata, scale), x, y);
 	} else {
-		sprite.UpdatePixels();
+		if (autoUpdate) sprite.UpdatePixels();
 		ctx.putImageData(sprite.imgdata, x, y);
 	}
 }
