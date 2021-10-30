@@ -25,7 +25,7 @@ class SoundEngine extends AudioWorkletProcessor {
 		
 		if (this.counter == 4) {
 			this.port.postMessage({});
-			while (this.sab[512] != 1) {};
+			while (this.sab[512] !== 1) {};
 			this.sab[512] = 0;
 			this.counter = 0;
 		}

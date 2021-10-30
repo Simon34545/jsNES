@@ -9,7 +9,7 @@ class sequencer {
 	clock(funcManip) {
 		if (true) {
 			this.timer--;
-			if (this.timer == -1) {
+			if (this.timer === -1) {
 				this.timer = (this.reload + 1) & 0xFFFF;
 				this.sequence = this.new_seq;
 				funcManip(this);
@@ -34,7 +34,7 @@ class envelope {
 			this.decay_counter = this.reload;
 			this.volume = 0xF;
 		} else {
-			if (this.decay_counter == 0) {
+			if (this.decay_counter === 0) {
 				this.decay_counter = this.reload;
 				if (this.volume > 0) {
 					this.volume--;
@@ -76,11 +76,11 @@ class sweeper {
 			this.mute = 0;
 		}
 		
-		if (this.divider == 0 && this.enable && !this.mute && this.shift_count !== 0) {
+		if (this.divider === 0 && this.enable && !this.mute && this.shift_count !== 0) {
 			this.channel.reload = this.target_period;
 		}
 		
-		if (this.divider == 0 || this.reload_flag) {
+		if (this.divider === 0 || this.reload_flag) {
 			this.divider = this.period + 1;
 			this.reload_flag = 0;
 		} else {
@@ -143,7 +143,7 @@ class linear_counter {
 	clock() {
 		if (this.reload_flag) {
 			this.counter = this.reload;
-		} else if (this.counter != 0) {
+		} else if (this.counter !== 0) {
 			this.counter--;
 		}
 		
@@ -161,7 +161,7 @@ class lfsr {
 	
 	clock() {
 		this.timer--;
-		if (this.timer == -1) {
+		if (this.timer === -1) {
 			this.timer = (this.reload + 1) & 0xFFFF;
 			
 			let feedback = (this.shift_register & 0x1) ^ (this.mode ? (this.shift_register >> 6 & 0x1) : (this.shift_register >> 1 & 0x1))
@@ -169,7 +169,7 @@ class lfsr {
 			this.shift_register >>= 1;
 			this.shift_register |= feedback << 14;
 		}
-		if (this.shift_register == 0) this.shift_register = 1;
+		if (this.shift_register === 0) this.shift_register = 1;
 	}
 }
 
@@ -324,7 +324,7 @@ class nes2A03 {
 	cpuRead(addr, readOnly) {
 		let data = 0x00;
 		
-		if (addr == 0x4015) {
+		if (addr === 0x4015) {
 			data = this.irq_flag << 6 | ((this.pnoise_cnt.counter > 0) << 3) |  ((this.triang_cnt.counter > 0) << 2) | ((this.pulse2_cnt.counter > 0) << 1) | (this.pulse1_cnt.counter > 0);
 			
 			if (!readOnly) {
@@ -341,69 +341,57 @@ class nes2A03 {
 		
 		this.globalTime += (0.3333333333 / 1789773);
 		
-		if (this.clock_counter % 3 == 0) {
-			
-			/*if (this.resetWait > -1) {
-				this.resetWait--;
-			} else if (this.resetWait == -1) {
-				this.frame_clock_counter = 0;
-				this.resetWait = -2;
-			}*/
-			
+		if (this.clock_counter % 3 === 0) {
 			if (!(this.cpu_clock_counter & 1)) {
 				this.frame_clock_counter++;
 				
-				/*quarterFrameClock = this.mirqWroteTo;
-				halfFrameClock = this.mirqWroteTo;
-				this.mirqWroteTo = false;
-				
-				if (this.temp) {
-					this.resetWait--;
-					this.temp = 0;
-				}*/
+				if (this.mirqWroteTo) {
+					this.mirqWroteTo = false;
+					this.temp = 1;
+				}
 				
 				if (this.seq_mode) {
-					if (this.frame_clock_counter == 3729) {
+					if (this.frame_clock_counter === 3729) {
 						quarterFrameClock = true;
 					}
 					
-					if (this.frame_clock_counter == 7457) {
+					if (this.frame_clock_counter === 7457) {
 						quarterFrameClock = true;
 						halfFrameClock = true;
 					}
 					
-					if (this.frame_clock_counter == 11186) {
+					if (this.frame_clock_counter === 11186) {
 						quarterFrameClock = true;
 					}
 					
-					if (this.frame_clock_counter == 18641) {
+					if (this.frame_clock_counter === 18641) {
 						quarterFrameClock = true;
 						halfFrameClock = true;
 						this.frame_clock_counter = 0;
 					}
 				} else {
-					if (this.frame_clock_counter == 0) {
+					if (this.frame_clock_counter === 0) {
 						this.irq_flag = this.irq_inhb ? false : true;
 					}
 					
-					if (this.frame_clock_counter == 3729) {
+					if (this.frame_clock_counter === 3729) {
 						quarterFrameClock = true;
 					}
 					
-					if (this.frame_clock_counter == 7457) {
+					if (this.frame_clock_counter === 7457) {
 						quarterFrameClock = true;
 						halfFrameClock = true;
 					}
 					
-					if (this.frame_clock_counter == 11186) {
+					if (this.frame_clock_counter === 11186) {
 						quarterFrameClock = true;
 					}
 					
-					if (this.frame_clock_counter == 14914) {
+					if (this.frame_clock_counter === 14914) {
 						this.irq_flag = this.irq_inhb ? false : true;
 					}
 					
-					if (this.frame_clock_counter == 14915) {
+					if (this.frame_clock_counter === 14915) {
 						quarterFrameClock = true;
 						halfFrameClock = true;
 						this.irq_flag = this.irq_inhb ? false : true;
@@ -432,7 +420,7 @@ class nes2A03 {
 				this.pulse1_seq.clock(function(s) {
 					s.output = (s.sequence & (0b10000000 >> s.seq_pos)) >> (7 - s.seq_pos);
 					s.seq_pos -= 1;
-					if (s.seq_pos == -1) s.seq_pos = 7;
+					if (s.seq_pos === -1) s.seq_pos = 7;
 				});
 				
 				if (this.pulse1_seq.output && !this.pulse1_swp.mute && this.pulse1_cnt.counter && this.pulse1_seq.reload > 7) {
@@ -444,7 +432,7 @@ class nes2A03 {
 				this.pulse2_seq.clock(function(s) {
 					s.output = (s.sequence & (0b10000000 >> s.seq_pos)) >> (7 - s.seq_pos);
 					s.seq_pos -= 1;
-					if (s.seq_pos == -1) s.seq_pos = 7;
+					if (s.seq_pos === -1) s.seq_pos = 7;
 				});
 				
 				if (this.pulse2_seq.output && !this.pulse2_swp.mute && this.pulse2_cnt.counter && this.pulse2_seq.reload > 7) {
@@ -460,19 +448,35 @@ class nes2A03 {
 				} else {
 					this.pnoise_sample = 0;
 				}
+			} else if (this.temp === 1) {
+				this.temp = 0;
+				this.frame_clock_counter = 0;
+				
+				this.pulse1_env.clock();
+				this.pulse2_env.clock();
+				
+				this.triang_lnc.clock();
+				this.pnoise_env.clock();
+				this.pulse1_cnt.clock();
+				this.pulse1_swp.clock();
+				this.pulse2_cnt.clock();
+				this.pulse2_swp.clock();
+				
+				this.triang_cnt.clock();
+				this.pnoise_cnt.clock();
 			}
 			
-			if (this.triang_lnc.counter != 0 && this.triang_cnt.counter != 0) {
+			if (this.triang_lnc.counter !== 0 && this.triang_cnt.counter !== 0) {
 				this.triang_seq.clock(function(s) {
-					if (s.new_seq == 0) {
+					if (s.new_seq === 0) {
 						s.seq_pos--;
-						if (s.seq_pos == -1) {
+						if (s.seq_pos === -1) {
 							s.seq_pos = 0;
 							s.new_seq = 1;
 						}
 					} else {
 						s.seq_pos++;
-						if (s.seq_pos == 16) {
+						if (s.seq_pos === 16) {
 							s.seq_pos = 15;
 							s.new_seq = 0;
 						}
@@ -497,10 +501,10 @@ class nes2A03 {
 	}
 	
 	GetOutputSample() {
-		let pulse_out = (95.98) / ((8128 / (this.pulse1_sample + this.pulse2_sample)) + 100);
-		let tnd_out = (159.79) / (((1) / ((this.triang_sample / 8227) + (this.pnoise_sample / 12241) + (this.dmcout_sample / 22638))) + 100);
+		let pulse_out = (95.98) / ((8128 / (this.pulse1_sample * this.volume[1] + this.pulse2_sample * this.volume[2])) + 100);
+		let tnd_out = (159.79) / (((1) / ((this.triang_sample * this.volume[3] / 8227) + (this.pnoise_sample * this.volume[4] / 12241) + (this.dmcout_sample * this.volume[5] / 22638))) + 100);
 		
-		return pulse_out + tnd_out;
+		return (pulse_out + tnd_out) * this.volume[0];
 	}
 	
 	constructor() {
@@ -515,6 +519,7 @@ class nes2A03 {
 	temp = 0;
 	
 	mode = 0;
+	volume = [1, 1, 1, 1, 1, 1];
 	
 	pnoise_lookup = [[4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068]
 									,[4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708,  944, 1890, 3778]];

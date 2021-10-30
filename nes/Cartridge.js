@@ -127,7 +127,7 @@ class Cartridge {
 	cpuRead(addr, data) {
 		this.mapped_addr.v = 0;
 		if (this.mapper.cpuMapRead(addr, this.mapped_addr, data)) {
-			if (this.mapped_addr.v == -1) {
+			if (this.mapped_addr.v === -1) {
 				return true;
 			} else {
 				data.v = this.PRGMemory[this.mapped_addr.v];
@@ -142,7 +142,7 @@ class Cartridge {
 	cpuWrite(addr, data) {
 		this.mapped_addr.v = 0;
 		if (this.mapper.cpuMapWrite(addr, this.mapped_addr, data)) {
-			if (this.mapped_addr.v == -1) {
+			if (this.mapped_addr.v === -1) {
 				return true;
 			} else {
 				this.PRGMemory[this.mapped_addr.v] = data.v;
@@ -181,7 +181,7 @@ class Cartridge {
 	
 	Mirror() {
 		let m = this.mapper.mirror();
-		if (m == MIRROR.HARDWARE) {
+		if (m === MIRROR.HARDWARE) {
 			return this.hw_mirror;
 		} else {
 			return m;

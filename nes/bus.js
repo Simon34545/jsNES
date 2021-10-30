@@ -78,9 +78,9 @@ class Bus {
 			this.cpuRam[addr & 0x07FF] = this.data.v;
 		} else if (addr >= 0x2000 && addr <= 0x3FFF) {
 			this.ppu.cpuWrite(addr & 0x0007, this.data.v);
-		} else if ((addr >= 0x4000 && addr <= 0x4013) || addr == 0x4015 || addr == 0x4017) {
+		} else if ((addr >= 0x4000 && addr <= 0x4013) || addr === 0x4015 || addr === 0x4017) {
 			this.apu.cpuWrite(addr, data);
-		} else if (addr == 0x4014) {
+		} else if (addr === 0x4014) {
 			this.dma_page = this.data.v;
 			this.dma_addr = 0x00;
 			this.dma_transfer = true;
@@ -99,7 +99,7 @@ class Bus {
 			this.data.v = this.cpuRam[addr & 0x07FF];
 		} else if (addr >= 0x2000 && addr <= 0x3FFF) {
 			this.data.v = this.ppu.cpuRead(addr & 0x0007, readOnly);
-		} else if (addr == 0x4015) {
+		} else if (addr === 0x4015) {
 			this.data.v = this.apu.cpuRead(addr, readOnly, temp);
 		} else if (addr >= 0x4016 && addr <= 0x4017) {
 			this.data.v = (this.controller_state[addr & 0x0001] & 0x80) > 0;
@@ -135,7 +135,7 @@ class Bus {
 		
 		this.apu.clock();
 		
-		if (this.systemClockCounter % 3 == 0) {
+		if (this.systemClockCounter % 3 === 0) {
 			if (this.dma_transfer) {
 				if (this.dma_dummy) {
 					if (this.systemClockCounter & 1) {
@@ -148,7 +148,7 @@ class Bus {
 						this.ppu.pOAM(this.dma_addr, this.dma_data);
 						this.dma_addr++;
 						
-						if (this.dma_addr == 0x100) {
+						if (this.dma_addr === 0x100) {
 							this.dma_transfer = false;
 							this.dma_dummy = true;
 						}

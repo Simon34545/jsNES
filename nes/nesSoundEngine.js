@@ -1,4 +1,4 @@
-const audioContext = new AudioContext({latencyHint: "interactive", sampleRate: 44100/4});
+const audioContext = new AudioContext({latencyHint: 50/1000, sampleRate: 44100/4});
 
 let nesSoundEngine;
 let soundReady = false;
@@ -20,6 +20,10 @@ let speed = 2;
 let sab = new SharedArrayBuffer(513 * Float64Array.BYTES_PER_ELEMENT);
 let buf = new Float64Array(sab);
 
+function SoundOut() {
+	return 0;
+}
+
 async function setupSound() {
 	await audioContext.audioWorklet.addModule('./nes-sound-worklet.js');
 	
@@ -31,9 +35,7 @@ async function setupSound() {
 	
 	nesSoundEngine.port.onmessage = function(e) {
 		for (let i = 0; i < 512; i++) {
-			if (typeof(SoundOut) == 'function') {
-				buf[i] = SoundOut();
-			}
+			buf[i] = SoundOut();
 		}
 		
 		buf[512] = 1;

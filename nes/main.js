@@ -247,7 +247,7 @@ function update(elapsedTime) {
 				
 				if (cart.imageValid) {
 					if (localStorage.hasOwnProperty(selection + 'save')) {
-						cart.mapper.RAMStatic = strToBytes(localStorage.getItem(selection + 'save')).split(',');
+						cart.mapper.RAMStatic = strToBytes(localStorage.getItem(selection + 'save'));
 					}
 					
 					nes.insertCartridge(cart);

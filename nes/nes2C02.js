@@ -458,15 +458,17 @@ class nes2C02 {
 		let bg_palette = 0x00;
 		
 		if (this.mask.render_background) {
-			let bit_mux = 0x8000 >> this.fine_x;
-			
-			let p0_pixel = (this.bg_shifter_pattern_lo & bit_mux) > 0 ? 1 : 0;
-			let p1_pixel = (this.bg_shifter_pattern_hi & bit_mux) > 0 ? 1 : 0;
-			bg_pixel = (p1_pixel << 1) | p0_pixel;
-			
-			let bg_pal0 = (this.bg_shifter_attrib_lo & bit_mux) > 0 ? 1 : 0;
-			let bg_pal1 = (this.bg_shifter_attrib_hi & bit_mux) > 0 ? 1 : 0;
-			bg_palette = (bg_pal1 << 1) | bg_pal0;
+			if ((this.mask.render_background_left && this.cycle < 9) || this.cycle >= 9) {
+				let bit_mux = 0x8000 >> this.fine_x;
+				
+				let p0_pixel = (this.bg_shifter_pattern_lo & bit_mux) > 0 ? 1 : 0;
+				let p1_pixel = (this.bg_shifter_pattern_hi & bit_mux) > 0 ? 1 : 0;
+				bg_pixel = (p1_pixel << 1) | p0_pixel;
+				
+				let bg_pal0 = (this.bg_shifter_attrib_lo & bit_mux) > 0 ? 1 : 0;
+				let bg_pal1 = (this.bg_shifter_attrib_hi & bit_mux) > 0 ? 1 : 0;
+				bg_palette = (bg_pal1 << 1) | bg_pal0;
+			}
 		}
 		
 		let fg_pixel = 0x00;
@@ -474,23 +476,25 @@ class nes2C02 {
 		let fg_priority = 0x00;
 		
 		if (this.mask.render_sprites) {
-			this.spriteZeroBeingRendered = false;
-			
-			for (let i = 0; i < this.sprite_count; i++) {
-				if (this.spriteScanline[i].x === 0) {
-					let fg_pixel_lo = (this.sprite_shifter_pattern_lo[i] & 0x80) > 0;
-					let fg_pixel_hi = (this.sprite_shifter_pattern_hi[i] & 0x80) > 0;
-					fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo;
-					
-					fg_palette = (this.spriteScanline[i].attribute & 0x03) + 0x04;
-					fg_priority = (this.spriteScanline[i].attribute & 0x20) === 0;
-					
-					if (fg_pixel !== 0) {
-						if (i === 0) {
-							this.spriteZeroBeingRendered = true;
-						}
+			if ((this.mask.render_sprites_left && this.cycle < 9) || this.cycle >= 9) {
+				this.spriteZeroBeingRendered = false;
+				
+				for (let i = 0; i < this.sprite_count; i++) {
+					if (this.spriteScanline[i].x === 0) {
+						let fg_pixel_lo = (this.sprite_shifter_pattern_lo[i] & 0x80) > 0;
+						let fg_pixel_hi = (this.sprite_shifter_pattern_hi[i] & 0x80) > 0;
+						fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo;
 						
-						break;
+						fg_palette = (this.spriteScanline[i].attribute & 0x03) + 0x04;
+						fg_priority = (this.spriteScanline[i].attribute & 0x20) === 0;
+						
+						if (fg_pixel !== 0) {
+							if (i === 0) {
+								this.spriteZeroBeingRendered = true;
+							}
+							
+							break;
+						}
 					}
 				}
 			}
@@ -519,7 +523,7 @@ class nes2C02 {
 			
 			if (this.spriteZeroHitPossible && this.spriteZeroBeingRendered) {
 				if (this.mask.render_background & this.mask.render_sprites) {
-					if (!(this.mask.render_background_left | this.mask.render_sprites_left)) {
+					if (!(this.mask.render_background_left || this.mask.render_sprites_left)) {
 						if (this.cycle >= 9 && this.cycle < 258) {
 							this.status.sprite_zero_hit = 1;
 						}
@@ -536,7 +540,7 @@ class nes2C02 {
 		
 		this.cycle++;
 		if (this.mask.render_background || this.mask.render_sprites) {
-			if (this.cycle == 260 && this.scanline < 240) {
+			if (this.cycle === 260 && this.scanline < 240) {
 				this.cart.GetMapper().scanline();
 			}
 		}
