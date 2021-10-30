@@ -137,7 +137,7 @@ class length_counter {
 class linear_counter {
 	counter = 0;
 	reload = 0;
-	reload_flag = 1;
+	reload_flag = 0;
 	control = 0;
 	
 	clock() {
@@ -286,7 +286,7 @@ class nes2A03 {
 			break;
 			
 		case 0x400E:
-			this.pnoise_lfs.reload = this.pnoise_lookup[data & 0xF];
+			this.pnoise_lfs.reload = this.pnoise_lookup[this.mode][data & 0xF];
 			this.pnoise_lfs.mode = data >> 7;
 			break;
 			
@@ -447,7 +447,7 @@ class nes2A03 {
 					if (s.seq_pos == -1) s.seq_pos = 7;
 				});
 				
-				if (this.pulse2_seq.output && !this.pulse2_swp.mute && this.pulse2_cnt.counter && this.pulse1_seq.reload > 7) {
+				if (this.pulse2_seq.output && !this.pulse2_swp.mute && this.pulse2_cnt.counter && this.pulse2_seq.reload > 7) {
 					this.pulse2_sample = this.pulse2_env.constant ? this.pulse2_env.reload : this.pulse2_env.volume;
 				} else {
 					this.pulse2_sample = 0;
@@ -514,7 +514,10 @@ class nes2A03 {
 	resetWait = -2;
 	temp = 0;
 	
-	pnoise_lookup = [4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068];
+	mode = 0;
+	
+	pnoise_lookup = [[4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068]
+									,[4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708,  944, 1890, 3778]];
 	length_lookup = [10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
 									 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30];
 	

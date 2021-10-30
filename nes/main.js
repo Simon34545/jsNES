@@ -70,7 +70,7 @@ let selecting = true;
 let selection = localStorage.getItem('selection') || "Select a file";
 
 let speeds = [1, 3, 6, 12, 25, 50, 75, 100, 150, 200, 300, 400, 800, 1600, 3200, 6400];
-let selectedspeed = 5;
+let selectedspeed = 7;
 
 function start() {
 	width = 780;
@@ -206,15 +206,16 @@ function update(elapsedTime) {
 						cart = new Cartridge(romData);
 						
 						if (cart.imageValid) {
-							let filestr = window.btoa(romData);
+							let filestr = bytesToStr(romData);
 							let savestr = '';
 							if (cart.mapperID == 1) {
-								savestr = window.btoa(new Uint8Array(32 * 1024).map(e => { return 255; }) );
+								savestr = bytesToStr(new Uint8Array(32 * 1024).map(e => { return 255; }) );
 							}
 							
 							if (Math.ceil((filestr + savestr).length / 512) <= space.left) {
 								localStorage.setItem(name, filestr);
-								if (!nesroms.hasOwnProperty(selection)) {
+								console.log(nesroms);
+								if (!nesroms.hasOwnProperty(name)) {
 									localStorage.setItem('roms', romStorage + name + '/');
 								}
 								localStorage.setItem('selection', name);
@@ -246,7 +247,7 @@ function update(elapsedTime) {
 				
 				if (cart.imageValid) {
 					if (localStorage.hasOwnProperty(selection + 'save')) {
-						cart.mapper.RAMStatic = window.atob(localStorage.getItem(selection + 'save')).split(',');
+						cart.mapper.RAMStatic = strToBytes(localStorage.getItem(selection + 'save')).split(',');
 					}
 					
 					nes.insertCartridge(cart);
@@ -294,17 +295,17 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	
 	if (pressedKeys[" "]) emulationRun = !emulationRun;
 	if (pressedKeys["r"]) nes.reset();
-	if (pressedKeys["p"]) selectedPalette = (++selectedPalette) & 0x07;
+	if (pressedKeys["p"]) nes.switchMode(audioContext.sampleRate * speed);//selectedPalette = (++selectedPalette) & 0x07;
 	
 	DrawCpu(516, 2);
 	//DrawCode(516, 72, 26);
 	
-	DrawString(516, 62, "Emulation speed: " + speeds[selectedspeed] + "%", colors.WHITE, 1);
+	DrawString(516, 62, "Emulator speed: " + speeds[selectedspeed] + "% (Mode: " + (nes.mode ? "PAL" : "NTSC") + ")", colors.WHITE, 1);
 	
 	if (nes.cart.mapperID == 1) {
 		DrawString(516, 72, "Press F to save game.", colors.WHITE, 1);
 		if (pressedKeys["f"]) {
-			localStorage.setItem(selection + 'save', window.btoa(cart.mapper.RAMStatic));
+			localStorage.setItem(selection + 'save', bytesToStr(cart.mapper.RAMStatic));
 		}
 	}
 	

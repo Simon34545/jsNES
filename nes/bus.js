@@ -20,10 +20,18 @@ class Bus {
 	dma_transfer = false;
 	
 	data = new uint8();
+	mode = 0;
 	
 	SetSampleFrequency(sample_rate) {
 		this.audioTimePerSystemSample = 1 / sample_rate;
-		this.audioTimePerNESClock = 1 / 5369318;
+		this.audioTimePerNESClock = 1 / (this.mode ? 4987821 : 5369318);
+	}
+	
+	switchMode(s) {
+		this.mode = !this.mode ? 1 : 0;
+		this.ppu.mode = this.mode;
+		this.apu.mode = this.mode;
+		this.SetSampleFrequency(s);
 	}
 	
 	audioSample = 0;

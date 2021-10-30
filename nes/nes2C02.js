@@ -1,5 +1,6 @@
 class nes2C02 {
 	cart = null;
+	mode = 0;
 	
 	tblName = [new Uint8Array(1024), new Uint8Array(1024)];
 	tblPalette = new Uint8Array(32);
@@ -543,7 +544,7 @@ class nes2C02 {
 		if (this.cycle >= 341) {
 			this.cycle = 0;
 			this.scanline++;
-			if (this.scanline >= 261) {
+			if (this.scanline >= 261 + (this.mode * 49)) {
 				this.scanline = -1;
 				this.frame_complete = true;
 				//vsync, disable for now

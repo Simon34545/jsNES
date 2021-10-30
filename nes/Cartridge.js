@@ -24,6 +24,8 @@ class Cartridge {
 	imageValid = false;
 	errorCode = 'An error occured while loading the rom!';
 	
+	mode = 0; // (0: NTSC; 2: PAL; 1/3: dual compatible)
+	
 	constructor(file) {
 		let read_idx = 0;
 		
@@ -113,6 +115,9 @@ class Cartridge {
 		case 66: this.mapper = new Mapper_066(this.PRGBanks, this.CHRBanks); break;
 		default: this.errorCode = 'Mapper ' + this.mapperID + ' not supported!'; return;
 		}
+		
+		this.mode1 = header.tv_system1 & 0x1;
+		this.mode2 = header.tv_system2 & 0x3;
 		
 		this.imageValid = true;
 	}
