@@ -42,7 +42,6 @@ class Cartridge {
 		header.prg_ram_size.v = file[8];
 		header.tv_system1.v = file[9];
 		header.tv_system2.v = file[10];
-		header.unused = new Uint8Array(5);
 		
 		header.unused[0] = file[11];
 		header.unused[1] = file[12];

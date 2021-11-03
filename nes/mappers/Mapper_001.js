@@ -111,7 +111,7 @@ class Mapper_001 extends Mapper {
 						return true;
 					}
 				} else {
-					mapped_addr.v = this.CHRBankSelect8 * 0x2000 + (addr & 0x1FFF);
+					mapped_addr.v = this.CHRBankSelect8 * 0x1000 + (addr & 0x1FFF);
 					return true;
 				}
 			}
