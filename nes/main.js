@@ -185,14 +185,47 @@ function update(elapsedTime) {
 			}
 		}
 		
-		if (pressedKeys["Enter"]) {
+		if (pressedKeys["Enter"] || debug) {
+			if (debug) {
+				speed = 1 / (speeds[selectedspeed] / 100);
+				
+				cart = new Cartridge(debugRom);
+				
+				if (cart.imageValid) {
+					let filestr = bytesToStr(debugRom);
+					let savestr = '';
+					if (cart.mapperID == 1) {
+						savestr = bytesToStr(new Uint8Array(32 * 1024).map(e => { return 255; }) );
+					}
+					
+					if (Math.ceil((filestr + savestr).length / 512) <= space.left) {
+						localStorage.setItem(debugName, filestr);
+						if (!nesroms.hasOwnProperty(debugName)) {
+							localStorage.setItem('roms', romStorage + debugName + '/');
+						}
+						localStorage.setItem('selection', debugName);
+					} else {
+						alert('File will not be added to the list because it is too large! (Size: ' + Math.ceil((filestr + savestr).length / 512) + ' KB, Space remaining: ' + space.left + ' KB)');
+					}
+					
+					nes.insertCartridge(cart);
+					
+					nes.SetSampleFrequency(audioContext.sampleRate);
+					
+					nes.reset();
+					selecting = false;
+				} else {
+					errorCode = 'Error: ' + cart.errorCode;
+				}
+				return;
+			}
 			if (selection == "Select a file") {
 				let input = document.createElement('input');
 				input.accept = '.nes';
 				input.multiple = false;
 				input.type = 'file';
 				
-				input.onchange = e => { 
+				input.onchange = e => {
 					let file = e.target.files[0]; 
 					let name = file.name;
 					

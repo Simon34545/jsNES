@@ -242,3 +242,24 @@ function localStorageSpace() {
 	
 	return {used: ((data.length * 16)/8), left: (5242880 - ((data.length * 16)/8))};
 };
+
+let debug = false;
+let debugName = 'bad_apple_2.nes';
+const debugHex = ''
+let debugRom = new Uint8Array(debugHex.length);
+
+for (let i = 0; i < debugHex.length; i++) {
+   debugRom[i] = parseInt(debugHex[i], 16);
+}
+
+if (debug) {
+	window.onerror = function(errorMsg, url, lineNumber){
+		alert("Error in " + url + " at " + lineNumber + ":\n" + errorMsg);
+	}
+	
+	var originalConsoleWarn = console.warn;
+	console.warn = function(message) {
+		alert(message);
+		originalConsoleWarn(message);
+	};
+}
