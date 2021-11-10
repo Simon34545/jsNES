@@ -23,14 +23,14 @@ function DrawRam(x, y, addr, rows, columns) {
 function DrawCpu(x, y) {
 	let status = "STATUS: ";
 	DrawString(x, y , "STATUS:", colors.WHITE);
-	DrawString(x + 64, y, "N", nes.cpu.status & nes.cpu.FLAGS6502.N ? colors.GREEN : colors.RED);
-	DrawString(x + 80, y , "V", nes.cpu.status & nes.cpu.FLAGS6502.V ? colors.GREEN : colors.RED);
-	DrawString(x + 96, y , "-", nes.cpu.status & nes.cpu.FLAGS6502.U ? colors.GREEN : colors.RED);
-	DrawString(x + 112, y , "B", nes.cpu.status & nes.cpu.FLAGS6502.B ? colors.GREEN : colors.RED);
-	DrawString(x + 128, y , "D", nes.cpu.status & nes.cpu.FLAGS6502.D ? colors.GREEN : colors.RED);
-	DrawString(x + 144, y , "I", nes.cpu.status & nes.cpu.FLAGS6502.I ? colors.GREEN : colors.RED);
-	DrawString(x + 160, y , "Z", nes.cpu.status & nes.cpu.FLAGS6502.Z ? colors.GREEN : colors.RED);
-	DrawString(x + 178, y , "C", nes.cpu.status & nes.cpu.FLAGS6502.C ? colors.GREEN : colors.RED);
+	DrawString(x + 64, y, "N", nes.cpu.status & FLAGS6502.N ? colors.GREEN : colors.RED);
+	DrawString(x + 80, y , "V", nes.cpu.status & FLAGS6502.V ? colors.GREEN : colors.RED);
+	DrawString(x + 96, y , "-", nes.cpu.status & FLAGS6502.U ? colors.GREEN : colors.RED);
+	DrawString(x + 112, y , "B", nes.cpu.status & FLAGS6502.B ? colors.GREEN : colors.RED);
+	DrawString(x + 128, y , "D", nes.cpu.status & FLAGS6502.D ? colors.GREEN : colors.RED);
+	DrawString(x + 144, y , "I", nes.cpu.status & FLAGS6502.I ? colors.GREEN : colors.RED);
+	DrawString(x + 160, y , "Z", nes.cpu.status & FLAGS6502.Z ? colors.GREEN : colors.RED);
+	DrawString(x + 178, y , "C", nes.cpu.status & FLAGS6502.C ? colors.GREEN : colors.RED);
 	DrawString(x, y + 10, "PC: $" + hex(nes.cpu.pc, 4));
 	DrawString(x, y + 20, "A: $" +  hex(nes.cpu.a, 2) + "  [" + nes.cpu.a + "]");
 	DrawString(x, y + 30, "X: $" +  hex(nes.cpu.x, 2) + "  [" + nes.cpu.x + "]");
