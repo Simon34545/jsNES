@@ -72,6 +72,9 @@ let selection = localStorage.getItem('selection') || "Select a file";
 let speeds = [1, 3, 6, 12, 25, 50, 75, 100, 150, 200, 300, 400, 800, 1600, 3200, 6400];
 let selectedspeed = 7;
 
+let samplerates = [44100/4, 44100/2, 44100/1]
+let selectedsamplerate = 0
+
 function start() {
 	width = 780;
 	height = 480;
@@ -80,7 +83,7 @@ function start() {
 	//nes.insertCartridge(cart);
 	
 	//mapAsm = nes.cpu.disassemble(0x0000, 0xFFFF);
-	nes.SetSampleFrequency(audioContext.sampleRate);
+	//nes.SetSampleFrequency(audioContext.sampleRate);
 	
 	//nes.reset();
 	return true;
@@ -169,12 +172,25 @@ function update(elapsedTime) {
 		DrawString(630, 84, ">", selectedspeed < speeds.length - 1 ? colors.WHITE : colors.DARK_GREY, 1);
 		DrawString(564, 84, speeds[selectedspeed] + '%', colors.WHITE, 1);
 		
-		if (pressedKeys["a"] || pressedKeys["ArrowLeft"]) {
+		DrawString(512, 104, "Sample rate: ", colors.WHITE, 1);
+		DrawString(512, 124, "<", selectedsamplerate ? colors.WHITE : colors.DARK_GREY, 1);
+		DrawString(630, 124, ">", selectedsamplerate < samplerates.length - 1 ? colors.WHITE : colors.DARK_GREY, 1);
+		DrawString(544, 124, samplerates[selectedsamplerate] + 'Hz', colors.WHITE, 1);
+		
+		if (pressedKeys["-"] || pressedKeys["_"]) {
 			selectedspeed = Math.max(0, selectedspeed - 1);
+		}
+			
+		if (pressedKeys["="] || pressedKeys["+"]) {
+			selectedspeed = Math.min(speeds.length - 1, selectedspeed + 1);
+		}
+		
+		if (pressedKeys["a"] || pressedKeys["ArrowLeft"]) {
+			selectedsamplerate = Math.max(0, selectedsamplerate - 1);
 		}
 		
 		if (pressedKeys["d"] || pressedKeys["ArrowRight"]) {
-			selectedspeed = Math.min(speeds.length - 1, selectedspeed + 1);
+			selectedsamplerate = Math.min(samplerates.length - 1, selectedsamplerate + 1);
 		}
 		
 		if (pressedKeys["Shift"]) {
@@ -210,6 +226,8 @@ function update(elapsedTime) {
 					
 					nes.insertCartridge(cart);
 					
+					audioContext = new AudioContext({latencyHint: 50/1000, sampleRate: samplerates[selectedsamplerate]});
+					startContext();
 					nes.SetSampleFrequency(audioContext.sampleRate);
 					
 					nes.reset();
@@ -258,6 +276,8 @@ function update(elapsedTime) {
 							
 							nes.insertCartridge(cart);
 							
+							audioContext = new AudioContext({latencyHint: 50/1000, sampleRate: samplerates[selectedsamplerate]});
+							startContext();
 							nes.SetSampleFrequency(audioContext.sampleRate);
 							
 							nes.reset();
@@ -285,6 +305,8 @@ function update(elapsedTime) {
 					
 					nes.insertCartridge(cart);
 					
+					audioContext = new AudioContext({latencyHint: 50/1000, sampleRate: samplerates[selectedsamplerate]});
+					startContext();
 					nes.SetSampleFrequency(audioContext.sampleRate);
 					
 					nes.reset();

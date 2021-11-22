@@ -1,10 +1,10 @@
-const audioContext = new AudioContext({latencyHint: 50/1000, sampleRate: 44100/4});
+let audioContext;// = new AudioContext({latencyHint: 50/1000, sampleRate: 44100/4});
 
 let nesSoundEngine;
 let soundReady = false;
 let workletReady = false;
 
-let biquadFilter1 = audioContext.createBiquadFilter();
+/*let biquadFilter1 = audioContext.createBiquadFilter();
 biquadFilter1.type = "highpass";
 biquadFilter1.frequency.value = 90;
 
@@ -14,7 +14,7 @@ biquadFilter2.frequency.value = 440;
 
 let biquadFilter3 = audioContext.createBiquadFilter();
 biquadFilter3.type = "lowpass";
-biquadFilter3.frequency.value = 14000;
+biquadFilter3.frequency.value = 14000;*/
 let speed = 2;
 
 let sab = new SharedArrayBuffer(513 * Float64Array.BYTES_PER_ELEMENT);
@@ -62,17 +62,19 @@ async function setupSound() {
 
 let contextStarted = false;
 
-let autoResume = setInterval(function() {
-	audioContext.resume();
-	
-	let soundReadyT = audioContext.state != "suspended";
-	if (soundReadyT == true && !contextStarted) {
-		contextStarted = true;
-		setupSound();
-	}
-	
-	if (workletReady) {
-		soundReady = true;
-		clearInterval(autoResume);
-	}
-}, 1);
+function startContext() {
+	let autoResume = setInterval(function() {
+		audioContext.resume();
+		
+		let soundReadyT = audioContext.state != "suspended";
+		if (soundReadyT == true && !contextStarted) {
+			contextStarted = true;
+			setupSound();
+		}
+		
+		if (workletReady) {
+			soundReady = true;
+			clearInterval(autoResume);
+		}
+	}, 1);
+}
