@@ -1,3 +1,75 @@
+// https://wiki.nesdev.org/w/index.php/NTSC_video
+let ntsc = false
+let signal_levels = new Array(256*8).fill(0)
+let ppu_cycles = 0
+let phase_scanline_start = 0
+
+const black = 0.518;
+const white = 1.962;
+const attenuation = 0.746;
+const levels = [0.350, 0.518, 0.962, 1.550, // low
+								1.094, 1.506, 1.962, 1.962]; // high
+
+let current_color = new Color();
+
+function NTSCsignal(pixel, phase) {
+	let color = (pixel & 0x0F);
+	let level = (pixel >> 4) & 3;
+	let emphasis = (pixel >> 6);
+	if (color > 13) level = 1;
+	
+	let low = levels[0 + level];
+	let high = levels[4 + level];
+	if (color == 0) low = high;
+  if (color > 12) high = low;
+	
+	let signal = ((color + phase) % 12 < 6) ? high : low;
+	
+	if ( ((emphasis & 1) && ((0 + phase) % 12 < 6))
+	||   ((emphasis & 2) && ((4 + phase) % 12 < 6))
+	||   ((emphasis & 4) && ((8 + phase) % 12 < 6)) ) signal = signal * attenuation;
+	
+	return signal;
+}
+
+function RenderNTSCpixel(x, pixel, PPU_cycle_counter) {
+	if (x > 255) return;
+	let phase = PPU_cycle_counter * 8;
+	
+	for (let p = 0; p < 8; p++) {
+		let signal = NTSCsignal(pixel, phase + p);
+		signal = (signal-black) / (white-black);
+		
+		signal_levels[x*8 + p] = signal;
+	}
+}
+
+let gamma = 2.0;
+let brightness = 1;
+let saturation = 1;
+let hue = 0;
+let bluramount = 6;
+let screenscale = 1;
+
+function gammafix(f) { 
+	return f <= 0 ? 0 : Math.pow(f, 2.2 / gamma) 
+}
+
+function clamp(v) {
+	return v > 255 ? 255 : v;
+}
+
+function YIQtoRGB(y, i, q) {
+	/*let c = (
+      0x10000*clamp(255.95 * gammafix(y +  0.946882*i +  0.623557*q))
+    + 0x00100*clamp(255.95 * gammafix(y + -0.274788*i + -0.635691*q))
+    + 0x00001*clamp(255.95 * gammafix(y + -1.108545*i +  1.709007*q)));*/
+	
+	current_color.r = clamp(255.95 * gammafix(y +  0.946882*i +  0.623557*q))
+	current_color.g = clamp(255.95 * gammafix(y + -0.274788*i + -0.635691*q))
+	current_color.b = clamp(255.95 * gammafix(y + -1.108545*i +  1.709007*q))
+}
+
 class nes2C02 {
 	cart = null;
 	mode = 0;
@@ -7,7 +79,7 @@ class nes2C02 {
 	tblPattern = [new Uint8Array(4096), new Uint8Array(4096)];
 	
 	palScreen = new Array(0x40).fill().map(u => { return new Color(); });
-	sprScreen = new Sprite(256, 240);
+	sprScreen = new Sprite(256*2, 240*2);
 	sprNameTable = [new Sprite(256, 240), new Sprite(256, 240)];
 	sprPatternTable = [new Sprite(128, 128), new Sprite(128, 128)];
 	
@@ -536,9 +608,19 @@ class nes2C02 {
 			}
 		}
 		
-		this.sprScreen.SetPixel(this.cycle - 1, this.scanline, this.GetColorFromPaletteRam(palette, pixel));//this.palScreen[(Math.floor(Math.random() * 32768) % 2) ? 0x3F : 0x30]);
+		if (!ntsc) {
+			this.sprScreen.SetPixel(this.cycle * screenscale, this.scanline * screenscale, this.GetColorFromPaletteRam(palette, pixel));//this.palScreen[(Math.floor(Math.random() * 32768) % 2) ? 0x3F : 0x30]);
+			if (screenscale > 1) {
+				this.sprScreen.SetPixel(this.cycle * screenscale, this.scanline * screenscale + 1, this.GetColorFromPaletteRam(palette, pixel));
+				this.sprScreen.SetPixel(this.cycle * screenscale + 1, this.scanline * screenscale, this.GetColorFromPaletteRam(palette, pixel));
+				this.sprScreen.SetPixel(this.cycle * screenscale + 1, this.scanline * screenscale + 1, this.GetColorFromPaletteRam(palette, pixel));
+			}
+		} else {
+			RenderNTSCpixel(this.cycle, this.ppuRead(0x3F00 + ((palette << 2) & 0xFF) + pixel) & 0x3F, ppu_cycles);
+		}
 		
 		this.cycle++;
+		ppu_cycles++;
 		if (this.mask.render_background || this.mask.render_sprites) {
 			if (this.cycle === 260 && this.scanline < 240) {
 				this.cart.GetMapper().scanline();
@@ -546,8 +628,32 @@ class nes2C02 {
 		}
 		
 		if (this.cycle >= 341) {
+			let Width = 256*screenscale
+			let phase = phase_scanline_start + hue;
+			if (ntsc && this.scanline < 240) {
+				for (let x = 0; x < Width; x++) {
+					let center = x * (256*8) / Width + 0;
+					let begin = center - bluramount; if (begin < 0)     begin = 0;
+					let end   = center + bluramount; if (end   > 256*8) end   = 256*8;
+					let y = 0;
+					let i = 0;
+					let q = 0;
+					for (let p = begin; p < end; p++) {
+						let level = signal_levels[p] / 12;
+						y = y + level;
+						i = i + level * Math.cos( Math.PI *(phase+p) / 6);
+						q = q + level * Math.sin( Math.PI *(phase+p) / 6);
+					}
+					
+					YIQtoRGB(y * brightness, i * saturation * brightness, q * saturation * brightness)
+					this.sprScreen.SetPixel(x, this.scanline * screenscale, current_color)
+					if (screenscale == 2) this.sprScreen.SetPixel(x, this.scanline * screenscale + 1, current_color)
+				}
+			}
+			
 			this.cycle = 0;
 			this.scanline++;
+			phase_scanline_start = ppu_cycles * 8 + 3.9;
 			if (this.scanline >= 261 + (this.mode * 49)) {
 				this.scanline = -1;
 				this.frame_complete = true;

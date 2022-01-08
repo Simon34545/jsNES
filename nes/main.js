@@ -386,6 +386,12 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	//DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));
 	
 	DrawSprite(0, 0, nes.ppu.GetScreen(), 1, true);
+	if (screenscale == 1) {
+		FillRect(256, 0, 256, 480, colors.DARK_BLUE)
+		FillRect(0, 240, 256, 240, colors.DARK_BLUE)
+	}
+//FillRect(0, nes.ppu.scanline, 256, 1, colors.WHITE)
+//FillRect(nes.ppu.cycle, 0, 1, 256, colors.WHITE)
 }
 
 function EmulatorUpdateWithoutAudio(elapsedTime) {
