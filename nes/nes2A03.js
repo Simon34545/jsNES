@@ -583,7 +583,7 @@ class nes2A03 {
 				});
 			}
 			
-			this.triang_sample = this.triang_seq.seq_pos;
+			this.triang_sample = (this.triang_seq.reload < 2) ? 7.5 : this.triang_seq.seq_pos;
 			
 			this.temp = 0;
 			this.cpu_clock_counter++;
