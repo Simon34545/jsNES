@@ -4,6 +4,7 @@ class Bus {
 	apu = new nes2A03();
 	
 	cart = null;
+	nsfMode = false;
 	
 	cpuRam = new Uint8Array(2048);
 	
@@ -42,6 +43,7 @@ class Bus {
 	
 	constructor() {		
 		this.cpu.ConnectBus(this);
+		this.apu.bus = this;
 		
 		this.apu.cpuWrite(0x4017, 0x00);
 		this.apu.cpuWrite(0x4015, 0x00);
@@ -131,9 +133,10 @@ class Bus {
 	}
 	
 	clock() {
-		this.ppu.clock();
+		if (!this.nsfMode) this.ppu.clock();
 		
 		this.apu.clock();
+		this.cart.mapper.soundClock();
 		
 		if (this.systemClockCounter % 3 === 0) {
 			if (this.dma_transfer) {
@@ -155,7 +158,7 @@ class Bus {
 					}
 				}
 			} else {
-				this.cpu.clock();
+				if (nes.cpu.pc > 0x0500 || this.nsfMode == false) this.cpu.clock();
 			}
 		}
 		
@@ -163,13 +166,13 @@ class Bus {
 		this.audioTime += this.audioTimePerNESClock;
 		if (this.audioTime >= this.audioTimePerSystemSample) {
 			this.audioTime -= this.audioTimePerSystemSample;
-			this.audioSample = this.apu.GetOutputSample();
+			this.audioSample = this.apu.GetOutputSample() + this.cart.mapper.GetOutputSample();
 			audioSampleReady = true;
 		}
 		
-		if (this.apu.irq_flag) {
+		if (this.apu.irq_flag || this.apu.dmc_irq_flag) {
 			this.apu.irq_flag = false;
-			this.cpu.irq();
+			if (!this.nsfMode) this.cpu.irq();
 		}
 		
 		if (this.ppu.nmi) {

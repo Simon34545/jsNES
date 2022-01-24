@@ -36,4 +36,12 @@ class Mapper {
 	scanline() {
 		
 	}
+	
+	soundClock() {
+		
+	}
+	
+	GetOutputSample() {
+		return 0;
+	}
 }

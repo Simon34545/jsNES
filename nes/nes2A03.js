@@ -48,6 +48,27 @@ class envelope {
 	}
 }
 
+class dmc_unit {
+	shift_register = 0x00;
+	silence = false;
+	bits_remaining = 0x01;
+	timer = 0x0000;
+	reload = 0x00;
+	output = 0x40;
+	
+	clock(funcManip) {
+		if (true) {
+			this.timer--;
+			if (this.timer === -1) {
+				this.timer = this.reload;
+				funcManip(this);
+			}
+		}
+		
+		return this.output;
+	}
+}
+
 class sweeper {
 	divider = 0;
 	reload_flag = 0;
@@ -295,8 +316,22 @@ class nes2A03 {
 			this.pnoise_env.start = 1;
 			break;
 			
+		case 0x4010:
+			this.dmc_seq.reload = this.dpcmrt_lookup[this.mode][data & 0x0F];
+			this.dmc_loop = (data & 0x40);
+			this.dmc_irq_enable = (data & 0x80);
+			break;
+			
 		case 0x4011:
-			this.dmcout_sample = data & 0x7F;
+			this.dmc_seq.output = data & 0x7F;
+			break;
+			
+		case 0x4012:
+			this.dmc_sample_address = (0xC000 | (data << 6))
+			break;
+			
+		case 0x4013:
+			this.dmc_sample_length = (0x01 | (data << 4))
 			break;
 			
 		case 0x4015:
@@ -309,6 +344,17 @@ class nes2A03 {
 			this.pulse2_cnt.counter *= (data >> 1) & 0x01;
 			this.triang_cnt.counter *= (data >> 2) & 0x01;
 			this.pnoise_cnt.counter *= (data >> 3) & 0x01;
+			
+			if ((data >> 4) & 0x01) {
+				if (!this.dmc_sample_remain) {
+					this.dmc_sample_counter = this.dmc_sample_address;
+					this.dmc_sample_remain = this.dmc_sample_length;
+				}
+			} else {
+				this.dmc_sample_remain = 0;
+			}
+			
+			this.dmc_irq_flag = false;
 			break;
 			
 		case 0x4017:
@@ -325,7 +371,7 @@ class nes2A03 {
 		let data = 0x00;
 		
 		if (addr === 0x4015) {
-			data = this.irq_flag << 6 | ((this.pnoise_cnt.counter > 0) << 3) |  ((this.triang_cnt.counter > 0) << 2) | ((this.pulse2_cnt.counter > 0) << 1) | (this.pulse1_cnt.counter > 0);
+			data = this.dmc_irq_flag << 7 | this.irq_flag << 6 | ((this.dmc_sample_remain > 0) << 4) | ((this.pnoise_cnt.counter > 0) << 3) |  ((this.triang_cnt.counter > 0) << 2) | ((this.pulse2_cnt.counter > 0) << 1) | (this.pulse1_cnt.counter > 0);
 			
 			if (!readOnly) {
 				this.irq_flag = false;
@@ -466,6 +512,59 @@ class nes2A03 {
 				this.pnoise_cnt.clock();
 			}
 			
+			if (this.dmc_buffer_empty && this.dmc_sample_remain) {
+				this.dmc_sample_buffer = 0x00;
+				
+				// the cpu should be stalled here
+				
+				this.dmc_sample_buffer = this.bus.cpuRead(this.dmc_sample_counter);
+				this.dmc_sample_counter ++;
+				if (this.dmc_sample_counter > 0xFFFF) this.dmc_sample_counter = 0x8000;
+				this.dmc_sample_remain--;
+				if (!this.dmc_sample_remain) {
+					if (this.dmc_loop) {
+						this.dmc_sample_counter = this.dmc_sample_address;
+						this.dmc_sample_remain = this.dmc_sample_length;
+					} else if (this.dmc_irq_enable) {
+						this.dmc_irq_flag = true;
+					}
+				}
+				
+				this.dmc_buffer_empty = false;
+			}
+			
+			let sb = this.dmc_sample_buffer;
+			let be = this.dmc_buffer_empty;
+			let buffer_emptied = false;
+			
+			this.dmc_seq.clock(function(s) {
+				if (!s.silence) {
+					if (s.shift_register & 0x01 && s.output <= 125) {
+						s.output += 2
+					} else if (s.output >= 2) {
+						s.output -= 2
+					}
+				}
+				
+				s.shift_register >>= 1;
+				s.bits_remaining -= 1;
+				
+				if (s.bits_remaining == 0) {
+					s.bits_remaining = 8;
+					if (be) {
+						s.silence = true;
+					} else {
+						s.silence = false;
+						s.shift_register = sb;
+						buffer_emptied = true;
+					}
+				}
+			});
+			
+			if (buffer_emptied) this.dmc_buffer_empty = true;
+			
+			this.dmc_sample = this.dmc_seq.output;
+			
 			if (this.triang_lnc.counter !== 0 && this.triang_cnt.counter !== 0) {
 				this.triang_seq.clock(function(s) {
 					if (s.new_seq === 0) {
@@ -497,12 +596,12 @@ class nes2A03 {
 		this.triang_seq.new_seq = 1;
 		this.triang_seq.seq_pos = 15;
 		
-		this.dmcout_sample &= 0x1;
+		this.dmc_sample &= 0x1;
 	}
 	
 	GetOutputSample() {
 		let pulse_out = (95.98) / ((8128 / (this.pulse1_sample * this.volume[1] + this.pulse2_sample * this.volume[2])) + 100);
-		let tnd_out = (159.79) / (((1) / ((this.triang_sample * this.volume[3] / 8227) + (this.pnoise_sample * this.volume[4] / 12241) + (this.dmcout_sample * this.volume[5] / 22638))) + 100);
+		let tnd_out = (159.79) / (((1) / ((this.triang_sample * this.volume[3] / 8227) + (this.pnoise_sample * this.volume[4] / 12241) + (this.dmc_sample * this.volume[5] / 22638))) + 100);
 		
 		return (pulse_out + tnd_out) * this.volume[0];
 	}
@@ -525,9 +624,12 @@ class nes2A03 {
 									,[4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708,  944, 1890, 3778]];
 	length_lookup = [10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
 									 12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30];
+	dpcmrt_lookup = [[428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106,  84,  72,  54],
+									 [398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118,  98,  78,  66,  50]]
 	
 	globalTime = 0;
 	cpu_clock_counter = 0;
+	
 	
 	irq_flag = false;
 	mirqWroteTo = false;
@@ -560,5 +662,17 @@ class nes2A03 {
 	pnoise_cnt = new length_counter();
 	pnoise_sample = 0;
 	
-	dmcout_sample = 0;
+	dmc_seq = new dmc_unit();
+	dmc_sample_buffer = 0x00;
+	dmc_sample_address = 0x0000;
+	dmc_sample_counter = 0x0000;
+	dmc_sample_length = 0x0000;
+	dmc_sample_remain = 0x0000;
+	dmc_buffer_empty = true;
+	dmc_irq_flag = false;
+	dmc_irq_enable = false;
+	dmc_loop = false;
+	dmc_sample = 0;
+	
+	bus = null;
 }

@@ -75,6 +75,9 @@ let selectedspeed = 7;
 let samplerates = [44100/4, 44100/2, 44100/1]
 let selectedsamplerate = 0
 
+let pause = false
+let nsfloop = setInterval(function(){}, 1000)
+
 function start() {
 	width = 780;
 	height = 480;
@@ -90,7 +93,7 @@ function start() {
 }
 
 function SoundOut() {
-	if (!selecting) while (!nes.clock()) {};
+	if (!selecting && !pause) while (!nes.clock()) {};
 	return nes.audioSample;
 }
 
@@ -239,7 +242,7 @@ function update(elapsedTime) {
 			}
 			if (selection == "Select a file") {
 				let input = document.createElement('input');
-				input.accept = '.nes';
+				input.accept = '.nes,.nsf';
 				input.multiple = false;
 				input.type = 'file';
 				
@@ -275,13 +278,19 @@ function update(elapsedTime) {
 							}
 							
 							nes.insertCartridge(cart);
-							
+							if (cart.type == "nsf") selectedsamplerate = 3
 							audioContext = new AudioContext({latencyHint: 50/1000, sampleRate: samplerates[selectedsamplerate]});
 							startContext();
 							nes.SetSampleFrequency(audioContext.sampleRate);
 							
 							nes.reset();
 							selecting = false;
+							
+							if (cart.type == "nsf") {
+								nes.nsfMode = true;
+								currentSong = cart.start;
+								NSFInitSong(currentSong);
+							}
 						} else {
 							errorCode = 'Error: ' + cart.errorCode;
 						}
@@ -304,13 +313,19 @@ function update(elapsedTime) {
 					}
 					
 					nes.insertCartridge(cart);
-					
+					if (cart.type == "nsf") selectedsamplerate = 3
 					audioContext = new AudioContext({latencyHint: 50/1000, sampleRate: samplerates[selectedsamplerate]});
 					startContext();
 					nes.SetSampleFrequency(audioContext.sampleRate);
 					
 					nes.reset();
 					selecting = false;
+					
+					if (cart.type == "nsf") {
+						nes.nsfMode = true;
+						currentSong = cart.start
+						NSFInitSong(currentSong);
+					}
 				} else {
 					errorCode = 'Error: ' + cart.errorCode;
 				}
@@ -318,8 +333,60 @@ function update(elapsedTime) {
 		}
 	} else {
 		nes.SetSampleFrequency(audioContext.sampleRate * speed);
-		EmulatorUpdateWithAudio(elapsedTime);
+		if (cart.type == "nes") {
+			EmulatorUpdateWithAudio(elapsedTime);
+		} else {
+			NSFUpdate(elapsedTime);
+		}
 	}
+}
+
+let currentSong = 1;
+
+function NSFPlay() {
+	if (pause || !nes.cpu.doneWithSubroutine) return;
+	nes.cpu.addr_abs = cart.playaddr;
+	nes.cpu.JSR();
+}
+
+function NSFInitSong(song) {
+	nes.cpu.pc = 0x0000;
+	clearInterval(nsfloop)
+	for (let i = 0x0000; i <= 0x07FF; i++) {
+		nes.cpuWrite(i, 0x00);
+	}
+	
+	for (let i = 0x6000; i <= 0x7FFF; i++) {
+		nes.cpuWrite(i, 0x00);
+	}
+	
+	for (let i = 0x4000; i <= 0x4013; i++) {
+		nes.cpuWrite(i, 0x00);
+	}
+	
+	nes.cpuWrite(0x4015, 0x00);
+	nes.cpuWrite(0x4015, 0x0F);
+	
+	nes.cpuWrite(0x4017, 0x40);
+	
+	if (cart.mapper.bankswitch) {
+		nes.cpuWrite(0x5FF8, cart.bankswitchvalues[0]);
+		nes.cpuWrite(0x5FF9, cart.bankswitchvalues[1]);
+		nes.cpuWrite(0x5FFA, cart.bankswitchvalues[2]);
+		nes.cpuWrite(0x5FFB, cart.bankswitchvalues[3]);
+		nes.cpuWrite(0x5FFC, cart.bankswitchvalues[4]);
+		nes.cpuWrite(0x5FFD, cart.bankswitchvalues[5]);
+		nes.cpuWrite(0x5FFE, cart.bankswitchvalues[6]);
+		nes.cpuWrite(0x5FFF, cart.bankswitchvalues[7]);
+	}
+	
+	nes.cpu.a = song - 1;
+	nes.cpu.x = 0;
+	nes.cpu.y = 0;
+	
+	nes.cpu.addr_abs = cart.initaddr;
+	nes.cpu.JSR();
+	nsfloop = setInterval(NSFPlay, 1000 / (1000000 / cart.ntscspeed))
 }
 
 function EmulatorUpdateWithAudio(elapsedTime) {
@@ -392,6 +459,49 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	}
 //FillRect(0, nes.ppu.scanline, 256, 1, colors.WHITE)
 //FillRect(nes.ppu.cycle, 0, 1, 256, colors.WHITE)
+}
+
+function NSFUpdate(elapsedTime) {
+	Clear(colors.DARK_BLUE);
+	
+	if (pressedKeys["-"] || pressedKeys["_"]) {
+		selectedspeed = Math.max(0, selectedspeed - 1);
+	}
+		
+	if (pressedKeys["="] || pressedKeys["+"]) {
+		selectedspeed = Math.min(speeds.length - 1, selectedspeed + 1);
+	}
+	
+	speed = 1 / (speeds[selectedspeed] / 100);
+	
+	if (pressedKeys["ArrowLeft"] || pressedKeys["a"]) {
+		currentSong--;
+		if (currentSong < 1) currentSong = cart.songs;
+		NSFInitSong(currentSong);
+	}
+	
+	if (pressedKeys["ArrowRight"] || pressedKeys["d"]) {
+		currentSong++;
+		if (currentSong > cart.songs) currentSong = 1;
+		NSFInitSong(currentSong);
+	}
+	
+	DrawString(516+178+18, 2, elapsedTime, elapsedTime > 16.66 ? (elapsedTime > 18 ? (elapsedTime > 20 ? colors.RED : colors.DARK_YELLOW) : colors.YELLOW) : colors.GREEN);
+	if (pressedKeys[" "]) pause = !pause
+	
+	DrawCpu(516, 2);
+	
+	DrawString(516, 62, "Emulator speed: " + speeds[selectedspeed] + "% (Mode: " + (nes.mode ? "PAL" : "NTSC") + ")", colors.WHITE, 1);
+	DrawString(516, 74, "Press SPACE to play/pause", colors.WHITE, 1);
+	DrawString(516, 86, "Press left/right to change songs", colors.WHITE, 1);
+	
+	FillRect(0, 0, 512, 480, colors.BLACK)
+	
+	DrawString(12, 12, "Title: " + cart.name, colors.WHITE, 1);
+	DrawString(12, 24, "Artist: " + cart.artist, colors.WHITE, 1);
+	DrawString(12, 36, "Copyright: " + cart.copyright, colors.WHITE, 1);
+	
+	DrawString(12, 450, "Song " + currentSong + " of " + cart.songs, colors.WHITE, 2);
 }
 
 function EmulatorUpdateWithoutAudio(elapsedTime) {

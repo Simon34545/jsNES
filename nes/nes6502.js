@@ -33,6 +33,8 @@ class nes6502 {
 	opcode = 0x00;
 	cycles = 0x00;
 	
+	doneWithSubroutine = true;
+	
 	ConnectBus(n) {
 		this.bus = n;
 	}
@@ -1636,6 +1638,7 @@ class nes6502 {
 	
 	irq() {
 		if (this.GetFlag(FLAGS6502.I) === 0) {
+			this.doneWithSubroutine = true;
 			this.write(0x0100 + this.stkp, (this.pc >> 8) & 0x00FF);
 			this.stkp = (this.stkp - 1) & 0xFF;
 			this.write(0x0100 + this.stkp, this.pc & 0x00FF);
@@ -1951,6 +1954,7 @@ class nes6502 {
 	}
 	
 	BRK() {
+		this.doneWithSubroutine = true;
 		this.pc = (this.pc + 1) & 0xFFFF;
 		
 		this.SetFlag(FLAGS6502.I, 1);
@@ -2103,6 +2107,7 @@ class nes6502 {
 	}
 	
 	JSR() {
+		this.doneWithSubroutine = false;
 		this.pc = (this.pc - 1) & 0xFFFF;
 		
 		this.write(0x0100 + this.stkp, (this.pc >> 8) & 0x00FF);
@@ -2245,6 +2250,7 @@ class nes6502 {
 	}
 	
 	RTS() {
+		this.doneWithSubroutine = true;
 		this.stkp = (this.stkp + 1) & 0xFF;
 		this.pc = this.read(0x0100 + this.stkp);
 		this.stkp = (this.stkp + 1) & 0xFF;
