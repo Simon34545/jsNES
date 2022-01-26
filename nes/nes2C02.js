@@ -10,7 +10,18 @@ const attenuation = 0.746;
 const levels = [0.350, 0.518, 0.962, 1.550, // low
 								1.094, 1.506, 1.962, 1.962]; // high
 
+function approxsin(t) {
+	let j = t * 0.15915;
+	j = j - Math.floor(j);
+	return 20.785 * j * (j - 0.5) * (j - 1);
+}
+
+function approxcos(t) {
+	return approxsin(Math.PI / 2 - t);
+}
+
 let current_color = new Color();
+let scanlinefilter = false;
 
 function NTSCsignal(pixel, phase) {
 	let color = (pixel & 0x0F);
@@ -609,11 +620,11 @@ class nes2C02 {
 		}
 		
 		if (!ntsc) {
-			this.sprScreen.SetPixel(this.cycle * screenscale, this.scanline * screenscale, this.GetColorFromPaletteRam(palette, pixel));//this.palScreen[(Math.floor(Math.random() * 32768) % 2) ? 0x3F : 0x30]);
+			this.sprScreen.SetPixel((this.cycle - 1) * screenscale, this.scanline * screenscale, this.GetColorFromPaletteRam(palette, pixel));//this.palScreen[(Math.floor(Math.random() * 32768) % 2) ? 0x3F : 0x30]);
 			if (screenscale > 1) {
-				this.sprScreen.SetPixel(this.cycle * screenscale, this.scanline * screenscale + 1, this.GetColorFromPaletteRam(palette, pixel));
-				this.sprScreen.SetPixel(this.cycle * screenscale + 1, this.scanline * screenscale, this.GetColorFromPaletteRam(palette, pixel));
-				this.sprScreen.SetPixel(this.cycle * screenscale + 1, this.scanline * screenscale + 1, this.GetColorFromPaletteRam(palette, pixel));
+				this.sprScreen.SetPixel((this.cycle - 1) * screenscale, this.scanline * screenscale + 1, this.GetColorFromPaletteRam(palette, pixel));
+				this.sprScreen.SetPixel((this.cycle - 1) * screenscale + 1, this.scanline * screenscale, this.GetColorFromPaletteRam(palette, pixel));
+				this.sprScreen.SetPixel((this.cycle - 1)* screenscale + 1, this.scanline * screenscale + 1, this.GetColorFromPaletteRam(palette, pixel));
 			}
 		} else {
 			RenderNTSCpixel(this.cycle, this.ppuRead(0x3F00 + ((palette << 2) & 0xFF) + pixel) & 0x3F, ppu_cycles);
@@ -629,25 +640,25 @@ class nes2C02 {
 		
 		if (this.cycle >= 341) {
 			let Width = 256*screenscale
-			let phase = phase_scanline_start + hue;
+			let phase = phase_scanline_start % 12 + hue;
 			if (ntsc && this.scanline < 240) {
 				for (let x = 0; x < Width; x++) {
 					let center = x * (256*8) / Width + 0;
-					let begin = center - bluramount; if (begin < 0)     begin = 0;
-					let end   = center + bluramount; if (end   > 256*8) end   = 256*8;
+					let begin = center - 6; if (begin < 0)     begin = 0;
+					let end   = center + 6; if (end   > 256*8) end   = 256*8;
 					let y = 0;
 					let i = 0;
 					let q = 0;
 					for (let p = begin; p < end; p++) {
 						let level = signal_levels[p] / 12;
 						y = y + level;
-						i = i + level * Math.cos( Math.PI *(phase+p) / 6);
-						q = q + level * Math.sin( Math.PI *(phase+p) / 6);
+						i = i + level * approxcos( Math.PI *(phase+p) / 6);
+						q = q + level * approxsin( Math.PI *(phase+p) / 6);
 					}
 					
 					YIQtoRGB(y * brightness, i * saturation * brightness, q * saturation * brightness)
-					this.sprScreen.SetPixel(x, this.scanline * screenscale, current_color)
-					if (screenscale == 2) this.sprScreen.SetPixel(x, this.scanline * screenscale + 1, current_color)
+					this.sprScreen.SetPixel(x - 1 * screenscale, this.scanline * screenscale, current_color)
+					if (screenscale == 2) this.sprScreen.SetPixel(x - 1 * screenscale, this.scanline * screenscale + 1, current_color, scanlinefilter ? 0.88 : 1)
 				}
 			}
 			

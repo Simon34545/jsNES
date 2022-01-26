@@ -413,7 +413,7 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	nes.controller[0] |= heldKeys["ArrowLeft"] || heldKeys["a"] ? 0x02 : 0x00;
 	nes.controller[0] |= heldKeys["ArrowRight"] || heldKeys["d"] ? 0x01 : 0x00;
 	
-	DrawString(516+178+18, 2, elapsedTime, elapsedTime > 16.66 ? (elapsedTime > 18 ? (elapsedTime > 20 ? colors.RED : colors.DARK_YELLOW) : colors.YELLOW) : colors.GREEN);
+	//DrawString(516+178+18, 2, elapsedTime, elapsedTime > 16.66 ? (elapsedTime > 18 ? (elapsedTime > 20 ? colors.RED : colors.DARK_YELLOW) : colors.YELLOW) : colors.GREEN);
 	
 	if (pressedKeys[" "]) emulationRun = !emulationRun;
 	if (pressedKeys["r"]) nes.reset();
@@ -452,10 +452,12 @@ function EmulatorUpdateWithAudio(elapsedTime) {
 	//DrawSprite(516, 348, nes.ppu.GetPatternTable(0, selectedPalette));
 	//DrawSprite(648, 348, nes.ppu.GetPatternTable(1, selectedPalette));
 	
-	DrawSprite(0, 0, nes.ppu.GetScreen(), 1, true);
+	DrawSprite(0, -8 * screenscale * !nes.mode, nes.ppu.GetScreen(), 1, true);
 	if (screenscale == 1) {
 		FillRect(256, 0, 256, 480, colors.DARK_BLUE)
-		FillRect(0, 240, 256, 240, colors.DARK_BLUE)
+		FillRect(0, 240 - 16 * !nes.mode, 256, 240 + 16 * !nes.mode, colors.DARK_BLUE)
+	} else if (!nes.mode) {
+		FillRect(0, 448, 512, 32, colors.DARK_BLUE)
 	}
 //FillRect(0, nes.ppu.scanline, 256, 1, colors.WHITE)
 //FillRect(nes.ppu.cycle, 0, 1, 256, colors.WHITE)
@@ -486,7 +488,7 @@ function NSFUpdate(elapsedTime) {
 		NSFInitSong(currentSong);
 	}
 	
-	DrawString(516+178+18, 2, elapsedTime, elapsedTime > 16.66 ? (elapsedTime > 18 ? (elapsedTime > 20 ? colors.RED : colors.DARK_YELLOW) : colors.YELLOW) : colors.GREEN);
+	//DrawString(516+178+18, 2, elapsedTime, elapsedTime > 16.66 ? (elapsedTime > 18 ? (elapsedTime > 20 ? colors.RED : colors.DARK_YELLOW) : colors.YELLOW) : colors.GREEN);
 	if (pressedKeys[" "]) pause = !pause
 	
 	DrawCpu(516, 2);

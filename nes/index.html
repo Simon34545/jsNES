@@ -37,6 +37,9 @@
 		<input type="checkbox" id="ntsc" name="ntsc" onchange="ntsc=document.getElementById('ntsc').checked;document.getElementById('ntscoptions').style.display=ntsc?'block':'none'">
 		<br>
 		<div id="ntscoptions" style="display: none">
+			<label for="scanlinefilter">Scanline filter</label>
+			<input type="checkbox" id="scanlinefilter" name="scanlinefilter" onchange="scanlinefilter=document.getElementById('scanlinefilter').checked">
+			<br>
 			<label for="gamma" id="gl">Gamma: 2</label>
 			<input type="range" id="gamma" name="gamma" value="2" min="0" max="5" step="0.1" onchange="gamma=Number(document.getElementById('gamma').value);document.getElementById('gl').innerHTML = 'Gamma: ' + gamma">
 			<br>

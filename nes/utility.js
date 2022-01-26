@@ -52,14 +52,14 @@ class Sprite {
 		this.imgdata.data.set(this.buf8);
 	}
 	
-	SetPixel(x, y, c) {
+	SetPixel(x, y, c, brightness = 1) {
 		if (x < 0 || y < 0) return;
 		if (x >= this.width || y >= this.height) return;
 		this.data[y * this.width + x] = 
 			(c.a << 24) |
-			(c.b << 16) |
-			(c.g <<  8) |
-			 c.r;
+			((c.b * brightness) << 16) |
+			((c.g * brightness) <<  8) |
+			 (c.r * brightness);
 	}
 	
 	GetPixel(x, y) {
@@ -172,13 +172,13 @@ let waitStart = setInterval(function() {
 			alert("Failed to start!");
 			return;
 		}
-		prevTime = performance.now();
+		//prevTime = performance.now();
 		frameInterval = setInterval(function() {
-			let currentTime = performance.now();
-			let elapsedTime = currentTime - prevTime;
-			prevTime = currentTime;
+			//let currentTime = performance.now();
+			//let elapsedTime = currentTime - prevTime;
+			//prevTime = currentTime;
 			if (typeof(update) == 'function') {
-				update(elapsedTime)
+				update()
 			}
 			for (const key in pressedKeys) {
 				pressedKeys[key] = false;

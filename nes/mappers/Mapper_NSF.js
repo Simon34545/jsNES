@@ -272,6 +272,8 @@ class Mapper_NSF extends Mapper {
 	}
 	
 	soundClock() {
+		if (!this.expansions) return;
+		
 		let quarterFrameClock = false;
 		let halfFrameClock = false;
 		
@@ -297,80 +299,84 @@ class Mapper_NSF extends Mapper {
 				this.frameClockCounter = 0;
 			}
 			
-			if (quarterFrameClock) {
-				this.pulseMMC51Env.clock();
-				this.pulseMMC51Env.clock();
-				this.pulseMMC51Cnt.clock();
-				this.pulseMMC51Cnt.clock();
-			}
-			
-			this.pulseMMC51Seq.clock(function(s) {
-				s.output = (s.sequence & (0b10000000 >> s.seq_pos)) >> (7 - s.seq_pos);
-				s.seq_pos -= 1;
-				if (s.seq_pos === -1) s.seq_pos = 7;
-			});
-			
-			if (this.pulseMMC51Seq.output && this.pulseMMC51Cnt.counter && this.pulseMMC51Seq.reload > 7) {
-				this.pulseMMC51Sample = this.pulseMMC51Env.constant ? this.pulseMMC51Env.reload : this.pulseMMC51Env.volume;
-			} else {
-				this.pulseMMC51Sample = 0;
-			}
-			
-			this.pulseMMC52Seq.clock(function(s) {
-				s.output = (s.sequence & (0b10000000 >> s.seq_pos)) >> (7 - s.seq_pos);
-				s.seq_pos -= 1;
-				if (s.seq_pos === -1) s.seq_pos = 7;
-			});
-			
-			if (this.pulseMMC52Seq.output && this.pulseMMC52Cnt.counter && this.pulseMMC52Seq.reload > 7) {
-				this.pulseMMC52Sample = this.pulseMMC52Env.constant ? this.pulseMMC52Env.reload : this.pulseMMC52Env.volume;
-			} else {
-				this.pulseMMC52Sample = 0;
+			if (this.expansions & 0b0001000) {
+				if (quarterFrameClock) {
+					this.pulseMMC51Env.clock();
+					this.pulseMMC51Env.clock();
+					this.pulseMMC51Cnt.clock();
+					this.pulseMMC51Cnt.clock();
+				}
+				
+				this.pulseMMC51Seq.clock(function(s) {
+					s.output = (s.sequence & (0b10000000 >> s.seq_pos)) >> (7 - s.seq_pos);
+					s.seq_pos -= 1;
+					if (s.seq_pos === -1) s.seq_pos = 7;
+				});
+				
+				if (this.pulseMMC51Seq.output && this.pulseMMC51Cnt.counter && this.pulseMMC51Seq.reload > 7) {
+					this.pulseMMC51Sample = this.pulseMMC51Env.constant ? this.pulseMMC51Env.reload : this.pulseMMC51Env.volume;
+				} else {
+					this.pulseMMC51Sample = 0;
+				}
+				
+				this.pulseMMC52Seq.clock(function(s) {
+					s.output = (s.sequence & (0b10000000 >> s.seq_pos)) >> (7 - s.seq_pos);
+					s.seq_pos -= 1;
+					if (s.seq_pos === -1) s.seq_pos = 7;
+				});
+				
+				if (this.pulseMMC52Seq.output && this.pulseMMC52Cnt.counter && this.pulseMMC52Seq.reload > 7) {
+					this.pulseMMC52Sample = this.pulseMMC52Env.constant ? this.pulseMMC52Env.reload : this.pulseMMC52Env.volume;
+				} else {
+					this.pulseMMC52Sample = 0;
+				}
 			}
 		}
 		
 		if (this.clockCounter % 3 == 0) {
-			// Konami VRC6 expansion
-			
-			this.pulseVRC61Seq.clock(this.pulseVRC61Enable, function(s) {
-				s.output = s.mode ? 1 : (s.step <= s.duty ? 1 : 0);
-				s.step--;
-				if (s.step == -1) {
-					s.step = 0xF;
-				}
-			});
-			
-			this.pulseVRC61Sample = this.pulseVRC61Seq.output * this.pulseVRC61Volume;
-			
-			this.pulseVRC62Seq.clock(this.pulseVRC62Enable, function(s) {
-				s.output = s.mode ? 1 : (s.step <= s.duty ? 1 : 0);
-				s.step--;
-				if (s.step == -1) {
-					s.step = 0xF;
-				}
-			});
-			
-			this.pulseVRC62Sample = this.pulseVRC62Seq.output * this.pulseVRC62Volume;
-			
-			let sawVRC6Volume = this.sawVRC6Volume;
-			
-			this.sawVRC6Seq.clock(this.sawVRC6Enable, function(s) {
-				if (s.step == 15) s.step = 0;
+			if (this.expansions & 0b0000001) {
+				// Konami VRC6 expansion
 				
-				if (s.step % 2 == 0 && s.step !== 0) {
-					s.acc = (s.acc + sawVRC6Volume) & 0xFF;
-					s.output = s.acc >> 3;
-				}
+				this.pulseVRC61Seq.clock(this.pulseVRC61Enable, function(s) {
+					s.output = s.mode ? 1 : (s.step <= s.duty ? 1 : 0);
+					s.step--;
+					if (s.step == -1) {
+						s.step = 0xF;
+					}
+				});
 				
-				if (s.step == 14) {
-					s.step = 0;
-					s.acc = 0;
-				}
+				this.pulseVRC61Sample = this.pulseVRC61Seq.output * this.pulseVRC61Volume;
 				
-				s.step++;
-			});
-			
-			this.sawVRC6Sample = this.sawVRC6Seq.output;
+				this.pulseVRC62Seq.clock(this.pulseVRC62Enable, function(s) {
+					s.output = s.mode ? 1 : (s.step <= s.duty ? 1 : 0);
+					s.step--;
+					if (s.step == -1) {
+						s.step = 0xF;
+					}
+				});
+				
+				this.pulseVRC62Sample = this.pulseVRC62Seq.output * this.pulseVRC62Volume;
+				
+				let sawVRC6Volume = this.sawVRC6Volume;
+				
+				this.sawVRC6Seq.clock(this.sawVRC6Enable, function(s) {
+					if (s.step == 15) s.step = 0;
+					
+					if (s.step % 2 == 0 && s.step !== 0) {
+						s.acc = (s.acc + sawVRC6Volume) & 0xFF;
+						s.output = s.acc >> 3;
+					}
+					
+					if (s.step == 14) {
+						s.step = 0;
+						s.acc = 0;
+					}
+					
+					s.step++;
+				});
+				
+				this.sawVRC6Sample = this.sawVRC6Seq.output;
+			}
 		}
 		
 		this.clockCounter++;
