@@ -44,7 +44,6 @@ function NTSCsignal(pixel, phase) {
 }
 
 function RenderNTSCpixel(x, pixel, PPU_cycle_counter) {
-	if (x > 255) return;
 	let phase = PPU_cycle_counter * 8;
 	
 	for (let p = 0; p < 8; p++) {
@@ -439,7 +438,7 @@ class nes2C02 {
 			
 			//Foreground Rendering
 			if (this.cycle === 257 && this.scanline >= 0) {
-				this.spriteScanline.forEach(function(e){e.reset(0xFF)});
+				//this.spriteScanline.forEach(function(e){e.reset(0xFF)});
 				this.sprite_count = 0;
 				
 				for (let i = 0; i < 8; i++) {
@@ -638,11 +637,11 @@ class nes2C02 {
 			}
 		}
 		
-		if (this.cycle >= 341) {
+		if (this.cycle >= 341) {	
 			let Width = 256*screenscale
 			let phase = phase_scanline_start % 12 + hue;
 			if (ntsc && this.scanline < 240) {
-				for (let x = 0; x < Width; x++) {
+				for (let x = 1; x <= Width; x++) {
 					let center = x * (256*8) / Width + 0;
 					let begin = center - 6; if (begin < 0)     begin = 0;
 					let end   = center + 6; if (end   > 256*8) end   = 256*8;
