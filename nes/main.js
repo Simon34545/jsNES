@@ -76,7 +76,6 @@ let samplerates = [44100/4, 44100/2, 44100/1]
 let selectedsamplerate = 0
 
 let pause = false
-let nsfloop = setInterval(function(){}, 1000)
 
 function start() {
 	width = 780;
@@ -287,9 +286,10 @@ function update(elapsedTime) {
 							selecting = false;
 							
 							if (cart.type == "nsf") {
-								nes.nsfMode = true;
+								nes.mode = cart.mode & 0x1;
 								currentSong = cart.start;
 								NSFInitSong(currentSong);
+								nes.nsfMode = true;
 							}
 						} else {
 							errorCode = 'Error: ' + cart.errorCode;
@@ -322,9 +322,10 @@ function update(elapsedTime) {
 					selecting = false;
 					
 					if (cart.type == "nsf") {
-						nes.nsfMode = true;
-						currentSong = cart.start
+						nes.mode = cart.mode & 0x1;
+						currentSong = cart.start;
 						NSFInitSong(currentSong);
+						nes.nsfMode = true;
 					}
 				} else {
 					errorCode = 'Error: ' + cart.errorCode;
@@ -343,15 +344,8 @@ function update(elapsedTime) {
 
 let currentSong = 1;
 
-function NSFPlay() {
-	if (pause || !nes.cpu.doneWithSubroutine) return;
-	nes.cpu.addr_abs = cart.playaddr;
-	nes.cpu.JSR();
-}
-
 function NSFInitSong(song) {
 	nes.cpu.pc = 0x0000;
-	clearInterval(nsfloop)
 	for (let i = 0x0000; i <= 0x07FF; i++) {
 		nes.cpuWrite(i, 0x00);
 	}
@@ -381,12 +375,12 @@ function NSFInitSong(song) {
 	}
 	
 	nes.cpu.a = song - 1;
-	nes.cpu.x = 0;
+	nes.cpu.x = nes.mode;
 	nes.cpu.y = 0;
 	
 	nes.cpu.addr_abs = cart.initaddr;
 	nes.cpu.JSR();
-	nsfloop = setInterval(NSFPlay, 1000 / (1000000 / cart.ntscspeed))
+	nes.nsfPlaySpeed = nes.mode ? cart.palspeed : cart.ntscspeed;
 }
 
 function EmulatorUpdateWithAudio(elapsedTime) {

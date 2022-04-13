@@ -170,7 +170,7 @@ class Cartridge {
 			
 			this.palspeed = (file[0x79] << 8) | file[0x78];
 			
-			this.mode = (file[0x7A] & 0x02) ? 2 : (file[0x7A] & 0x01);
+			this.mode = file[0x7A] & 0x03;
 			
 			this.expansion = file[0x7B] & 0x7F;
 			

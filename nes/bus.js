@@ -24,8 +24,8 @@ class Bus {
 	mode = 0;
 	
 	SetSampleFrequency(sample_rate) {
-		this.audioTimePerSystemSample = 1 / sample_rate;
-		this.audioTimePerNESClock = 1 / (this.mode ? 4987821 : 5369318);
+		this.audioTimePerSystemSample = 1000 / sample_rate;
+		this.audioTimePerNESClock = 1000 / (this.mode ? 4987821 : 5369318);
 	}
 	
 	switchMode(s) {
@@ -40,6 +40,9 @@ class Bus {
 	
 	audioTimePerSystemSample = 0;
 	audioTimePerNESClock = 0;
+	
+	nsfPlaySpeed = 0;
+	nsfTimer = 0;
 	
 	constructor() {		
 		this.cpu.ConnectBus(this);
@@ -132,6 +135,12 @@ class Bus {
 		this.dma_transfer = false;
 	}
 	
+	NSFPlay() {
+		if (!this.cpu.doneWithSubroutine) return;
+		this.cpu.addr_abs = cart.playaddr;
+		this.cpu.JSR();
+	}
+	
 	clock() {
 		if (!this.nsfMode) this.ppu.clock();
 		
@@ -183,6 +192,14 @@ class Bus {
 		if (this.cart.GetMapper().irqState()) {
 			this.cart.GetMapper().irqClear();
 			this.cpu.irq();
+		}
+		
+		if (this.nsfMode) {
+			this.nsfTimer += this.audioTimePerNESClock;
+			if (this.nsfTimer >= this.nsfPlaySpeed / 1000) {
+				this.nsfTimer -= this.nsfPlaySpeed / 1000;
+				this.NSFPlay();
+			}
 		}
 		
 		this.systemClockCounter++;

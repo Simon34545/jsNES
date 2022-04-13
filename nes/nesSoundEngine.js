@@ -74,6 +74,7 @@ function startContext() {
 		
 		if (workletReady) {
 			soundReady = true;
+			document.body.onunload = function() { buf[512] = 1; audioContext.close() }
 			clearInterval(autoResume);
 		}
 	}, 1);
